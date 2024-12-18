@@ -92,7 +92,8 @@
 
 ## 技術スタック
 
-- フロントエンド: Next.js, TailwindCSS
+- フロントエンド: Next.js, TailwindCSS, shadcn/ui, SWR, 
+- バックエンド: Supabase, Drizzle
 - AI: OpenAI API
 - 認証: NextAuth.js
 - デプロイ: Vercel
