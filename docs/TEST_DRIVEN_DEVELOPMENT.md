@@ -1,267 +1,636 @@
-# テスト駆動開発ガイド
+# COO 前田くん AI テスト駆動開発ガイド
 
-## 概要
+## 1. テスト戦略概要
 
-このプロジェクトでは、テスト駆動開発（TDD）を採用し、高品質なコードベースを維持します。
-TDD サイクル（Red-Green-Refactor）に従い、テストファーストな開発を行います。
+### 1.1 テストレベル
 
-## テスト戦略
+- ユニットテスト（カバレッジ目標：80%以上）
+- 統合テスト
+- E2E テスト
+- セキュリティテスト
 
-### 1. テストレベル
+### 1.2 テストツール
 
-1. ユニットテスト
+- Jest + React Testing Library
+- Cypress（E2E テスト）
+- MSW（API モック）
+- Storybook（UI コンポーネント）
+- Vitest（ユニットテスト）
 
-   - 対象: 個別のコンポーネント、関数、フック
-   - ツール: Jest, React Testing Library
-   - カバレッジ目標: 80%以上
+## 2. テスト対象領域
 
-2. 統合テスト
-
-   - 対象: コンポーネント間の連携、API との通信
-   - ツール: Jest, MSW (Mock Service Worker)
-   - 重点: データフローの検証
-
-3. E2E テスト
-   - 対象: ユーザーシナリオ、主要フロー
-   - ツール: Cypress
-   - 範囲: クリティカルパスの網羅
-
-### 2. テスト分類
-
-1. コンポーネントテスト
-
-   ```typescript
-   // tests/components/Button.test.tsx
-   describe("Button", () => {
-     it("renders children correctly", () => {
-       render(<Button>Click me</Button>);
-       expect(screen.getByText("Click me")).toBeInTheDocument();
-     });
-
-     it("handles click events", () => {
-       const onClick = jest.fn();
-       render(<Button onClick={onClick}>Click me</Button>);
-       userEvent.click(screen.getByText("Click me"));
-       expect(onClick).toHaveBeenCalled();
-     });
-   });
-   ```
-
-2. フックテスト
-
-   ```typescript
-   // tests/hooks/useTemplates.test.ts
-   describe("useTemplates", () => {
-     it("fetches templates successfully", async () => {
-       const { result } = renderHook(() => useTemplates());
-       await waitFor(() => {
-         expect(result.current.templates).toHaveLength(2);
-       });
-     });
-
-     it("handles error states", async () => {
-       server.use(
-         rest.get("/api/templates", (req, res, ctx) => {
-           return res(ctx.status(500));
-         })
-       );
-       const { result } = renderHook(() => useTemplates());
-       await waitFor(() => {
-         expect(result.current.error).toBeTruthy();
-       });
-     });
-   });
-   ```
-
-3. ユーティリティテスト
-
-   ```typescript
-   // tests/utils/validation.test.ts
-   describe("validateTemplate", () => {
-     it("validates template structure", () => {
-       const template = {
-         name: "Test Template",
-         content: "<div>Test</div>",
-       };
-       expect(validateTemplate(template)).toBe(true);
-     });
-
-     it("rejects invalid templates", () => {
-       const template = {
-         name: "",
-       };
-       expect(validateTemplate(template)).toBe(false);
-     });
-   });
-   ```
-
-### 3. テストカバレッジ要件
-
-1. 必須カバレッジ対象
-
-   - コンポーネントの Props
-   - イベントハンドラ
-   - 条件分岐
-   - エラー処理
-   - 非同期処理
-
-2. カバレッジ目標
-   - Statements: 80%以上
-   - Branches: 80%以上
-   - Functions: 80%以上
-   - Lines: 80%以上
-
-## 開発フロー
-
-### 1. 新機能開発
-
-1. テスト作成（Red）
-
-   ```bash
-   # テストファイルの作成
-   touch tests/components/NewFeature.test.tsx
-
-   # テストの実装
-   describe('NewFeature', () => {
-     it('implements required behavior', () => {
-       // テストケース
-     })
-   })
-   ```
-
-2. 実装（Green）
-
-   ```bash
-   # 実装ファイルの作成
-   touch components/NewFeature.tsx
-
-   # テストが通るように実装
-   export const NewFeature = () => {
-     // 実装
-   }
-   ```
-
-3. リファクタリング（Refactor）
-   ```typescript
-   // コードの改善
-   export const NewFeature = () => {
-     // リファクタリング後の実装
-   };
-   ```
-
-### 2. バグ修正
-
-1. 再現テスト作成
-
-   ```typescript
-   it("reproduces the bug", () => {
-     // バグを再現するテストケース
-   });
-   ```
-
-2. 修正実装
-
-   ```typescript
-   // バグ修正の実装
-   ```
-
-3. 回帰テスト追加
-   ```typescript
-   it("prevents regression", () => {
-     // 回帰を防ぐテストケース
-   });
-   ```
-
-## テストプラクティス
-
-### 1. テストの構造
+### 2.1 チャットインターフェース
 
 ```typescript
-describe("ComponentName", () => {
-  // セットアップ
-  beforeEach(() => {
-    // テストの前準備
-  });
+// tests/features/chat/ChatInterface.test.tsx
+describe("ChatInterface", () => {
+  describe("メッセージ送信", () => {
+    it("テキストメッセージを送信できる", () => {
+      // テストケース
+    });
 
-  // 正常系テスト
-  describe("when used normally", () => {
-    it("behaves as expected", () => {
+    it("空メッセージは送信できない", () => {
+      // テストケース
+    });
+
+    it("ファイルを添付できる", () => {
+      // テストケース
+    });
+
+    it("長文メッセージを適切に処理する", () => {
       // テストケース
     });
   });
 
-  // エラー系テスト
-  describe("when encountering errors", () => {
-    it("handles errors gracefully", () => {
+  describe("メッセージ表示", () => {
+    it("チャット履歴を正しく���示する", () => {
+      // テストケース
+    });
+
+    it("メッセージの種類に応じて適切なスタイルを適用する", () => {
+      // テストケース
+    });
+
+    it("画像やグラフを適切にレンダリングする", () => {
       // テストケース
     });
   });
 });
 ```
 
-### 2. モックの使用
+### 2.2 AI 対話処理
 
-1. API モック
+```typescript
+// tests/features/ai/AIProcessor.test.ts
+describe("AIProcessor", () => {
+  describe("意図解析", () => {
+    it("スケジュール関連の意図を識別できる", () => {
+      // テストケース
+    });
 
-   ```typescript
-   // tests/mocks/api.ts
-   export const mockApi = {
-     getTemplates: jest.fn(),
-   };
-   ```
+    it("タスク関連の意図を識別できる", () => {
+      // テストケース
+    });
 
-2. コンポーネントモック
-   ```typescript
-   // tests/mocks/components.tsx
-   jest.mock("components/ComplexComponent", () => {
-     return {
-       ComplexComponent: () => <div>Mocked Component</div>,
-     };
-   });
-   ```
+    it("KPI確認の意図を識別できる", () => {
+      // テストケース
+    });
+  });
 
-### 3. テストユーティリティ
+  describe("コンテキスト管理", () => {
+    it("会話の文脈を適切に維持する", () => {
+      // テストケース
+    });
 
-1. カスタムレンダラー
+    it("複数ターンの会話を正しく処理する", () => {
+      // テストケース
+    });
+  });
+});
+```
 
-   ```typescript
-   // tests/utils/render.tsx
-   export const renderWithProviders = (
-     ui: React.ReactElement,
-     options = {}
-   ) => {
-     return render(<Providers>{ui}</Providers>, options);
-   };
-   ```
+### 2.3 タスク管理機能
 
-2. テストヘルパー
-   ```typescript
-   // tests/utils/helpers.ts
-   export const waitForLoadingToFinish = () =>
-     waitFor(() =>
-       expect(screen.queryByText("Loading...")).not.toBeInTheDocument()
-     );
-   ```
+```typescript
+// tests/features/tasks/TaskManager.test.ts
+describe("TaskManager", () => {
+  describe("タスク作成", () => {
+    it("自然言語からタスクを作成できる", () => {
+      // テストケース
+    });
 
-## レビュー基準
+    it("期��と優先度を適切に設定できる", () => {
+      // テストケース
+    });
+  });
 
-### 1. テスト品質チェック
+  describe("タスク更新", () => {
+    it("進捗状況を更新できる", () => {
+      // テストケース
+    });
 
-- [ ] テストが理解しやすく記述されている
-- [ ] テストが独立して実行可能
-- [ ] テストが適切にモック化されている
-- [ ] エッジケースが考慮されている
+    it("タスクの依存関係を管理できる", () => {
+      // テストケース
+    });
+  });
+});
+```
 
-### 2. 実装品質チェック
+### 2.4 スケジュール管理
 
-- [ ] テストが意図した動作を検証している
-- [ ] 不必要な実装が含まれていない
-- [ ] パフォーマンスが考慮されている
-- [ ] エラーハンドリングが適切
+```typescript
+// tests/features/schedule/ScheduleManager.test.ts
+describe("ScheduleManager", () => {
+  describe("予定作成", () => {
+    it("自然言語から予定を作成できる", () => {
+      // テストケース
+    });
 
-### 3. メンテナンス性チェック
+    it("時間の重複をチェックする", () => {
+      // テストケース
+    });
 
-- [ ] テストが壊れやすくない
-- [ ] テストが実装の詳細に依存していない
-- [ ] テストが適切に文書化されている
-- [ ] テストが保守しやすい
+    it("参加者の予定を考慮する", () => {
+      // テストケース
+    });
+  });
+
+  describe("カレンダー連携", () => {
+    it("外部カレンダーと同期できる", () => {
+      // テストケース
+    });
+
+    it("定期的な予定を適切に処理する", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 2.5 KPI/データ分析
+
+```typescript
+// tests/features/kpi/KPIAnalyzer.test.ts
+describe("KPIAnalyzer", () => {
+  describe("データ集計", () => {
+    it("期間ごとの集計ができる", () => {
+      // テストケース
+    });
+
+    it("複数指標の相関を分析できる", () => {
+      // テストケース
+    });
+  });
+
+  describe("レポート生成", () => {
+    it("グラフを生成できる", () => {
+      // テストケース
+    });
+
+    it("分析結果を自然言語で説明できる", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 2.6 ファイル処理
+
+```typescript
+// tests/features/files/FileProcessor.test.ts
+describe("FileProcessor", () => {
+  describe("ファイルアップロード", () => {
+    it("許可された形式のファイルを受け付ける", () => {
+      // テストケース
+    });
+
+    it("ファイルサイズ制限を適用する", () => {
+      // テストケース
+    });
+  });
+
+  describe("ファイル分析", () => {
+    it("Excelファイルからデータを抽出できる", () => {
+      // テストケース
+    });
+
+    it("PDFからテキストを抽出できる", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 2.7 通知システム
+
+```typescript
+// tests/features/notifications/NotificationManager.test.ts
+describe("NotificationManager", () => {
+  describe("通知生成", () => {
+    it("重要度に応じて適切な通知を生成する", () => {
+      // テストケース
+    });
+
+    it("通知の重複を防ぐ", () => {
+      // テストケース
+    });
+  });
+
+  describe("通知配信", () => {
+    it("適切なチャネルで通知を配信する", () => {
+      // テストケース
+    });
+
+    it("配信失敗時にリトライする", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+## 3. 統合テスト
+
+### 3.1 機能間連携
+
+```typescript
+// tests/integration/FeatureIntegration.test.ts
+describe("機能間連携", () => {
+  it("タスクからスケジュールを作成できる", () => {
+    // テストケース
+  });
+
+  it("KPIの変動でタスクが生成される", () => {
+    // テストケース
+  });
+
+  it("スケジュールの変更がタスクに反映される", () => {
+    // テストケース
+  });
+});
+```
+
+### 3.2 外部サービス連携
+
+```typescript
+// tests/integration/ExternalServices.test.ts
+describe("外部サービス連携", () => {
+  it("Google Calendarと同期できる", () => {
+    // テストケース
+  });
+
+  it("Slackに通知を送信できる", () => {
+    // テストケース
+  });
+
+  it("OpenAI APIと適切に通信できる", () => {
+    // テストケース
+  });
+});
+```
+
+## 4. E2E テスト
+
+### 4.1 主要ユースケース
+
+```typescript
+// tests/e2e/MainUserFlows.spec.ts
+describe("主要ユースケース", () => {
+  it("タスク作成から完了までの一連の流れ", () => {
+    // テストケース
+  });
+
+  it("スケジュール調整と参加者への通知", () => {
+    // テストケース
+  });
+
+  it("KPI分析とアクションプラン作成", () => {
+    // テストケース
+  });
+});
+```
+
+## 5. パフォーマンステスト
+
+### 5.1 負荷テスト
+
+```typescript
+// tests/performance/LoadTesting.test.ts
+describe("負荷テスト", () => {
+  it("多数のメッセージを同時に処理できる", () => {
+    // テストケース
+  });
+
+  it("大量のデータを含むKPI分析を実行できる", () => {
+    // テストケース
+  });
+});
+```
+
+## 6. セキュリティテスト
+
+### 6.1 認証・認可
+
+```typescript
+// tests/security/Authentication.test.ts
+describe("認証・認可", () => {
+  it("適切な認証プロセスを実行する", () => {
+    // テストケース
+  });
+
+  it("権限のないリソースにアクセスできない", () => {
+    // テストケース
+  });
+});
+```
+
+## 7. テスト実行ガイドライン
+
+### 7.1 テスト環境設定
+
+```bash
+# 開発環境のセットアップ
+npm install
+npm run test:setup
+
+# テストの実行
+npm run test           # ユニットテスト
+npm run test:e2e      # E2Eテスト
+npm run test:coverage # カバレッジレポート
+```
+
+### 7.2 テスト実行の自動化
+
+- GitHub Actions での自動テスト実行
+- プルリクエスト時の自動テスト
+- 定期的な統合テストの実行
+
+### 7.3 テスト結果の管理
+
+- テストカバレッジレポートの生成
+- テスト失敗の分析と追跡
+- 定期的なテスト品質レビュー
+
+## 8. ベストプラクティス
+
+### 8.1 テスト作成のガイドライン
+
+- テストは明確で理解しやすく記述する
+- 一つのテストは一つの機能/動作をテストする
+- テストデータは現実的なものを使用する
+- エッジケースを考慮する
+
+### 8.2 メンテナンス
+
+- 定期的なテストコードのリファクタリング
+- 不要なテストの削除
+- テストヘルパー・ユーティリティの整理
+- モックデータの更新
+
+### 8.3 レビュー基準
+
+- テストの網羅性
+- テストの独立性
+- テストの可読性
+- テストの実行速度
+
+## 9. API テスト
+
+### 9.1 認証・認可 API
+
+```typescript
+// tests/api/auth/AuthAPI.test.ts
+describe("認証API", () => {
+  describe("ログイン", () => {
+    it("有効な認証情報でログインできる", () => {
+      // テストケース
+    });
+
+    it("無効な認証情報でエラーを返す", () => {
+      // テストケース
+    });
+
+    it("トークンの有効期限を検証する", () => {
+      // テストケース
+    });
+  });
+
+  describe("認可", () => {
+    it("有効なトークンでAPIにアクセスできる", () => {
+      // テストケース
+    });
+
+    it("無効なトークンでエラーを返す", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 9.2 チャット API
+
+```typescript
+// tests/api/chat/ChatAPI.test.ts
+describe("チャットAPI", () => {
+  describe("メッセージ送信", () => {
+    it("テキストメッセージを送信できる", () => {
+      // テストケース
+    });
+
+    it("添付ファイル付きメッセージを送信できる", () => {
+      // テストケース
+    });
+
+    it("長文メッセージを適切に処理する", () => {
+      // テストケース
+    });
+  });
+
+  describe("チャット履歴", () => {
+    it("チャット履歴を取得できる", () => {
+      // テストケース
+    });
+
+    it("ページネーションが正しく動作する", () => {
+      // テストケース
+    });
+
+    it("日付範囲でフィルタリングできる", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 9.3 タスク API
+
+```typescript
+// tests/api/tasks/TaskAPI.test.ts
+describe("タスクAPI", () => {
+  describe("タスク作成", () => {
+    it("必要な情報を含むタスクを作成できる", () => {
+      // テストケース
+    });
+
+    it("不正なデータでエラーを返す", () => {
+      // テストケース
+    });
+
+    it("重複するタスクを検出する", () => {
+      // テストケース
+    });
+  });
+
+  describe("タスク更新", () => {
+    it("タスクのステータスを更新できる", () => {
+      // テストケース
+    });
+
+    it("タスクの優先度を変更できる", () => {
+      // テストケース
+    });
+
+    it("存在しないタスクの更新でエラーを返す", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 9.4 スケジュール API
+
+```typescript
+// tests/api/schedule/ScheduleAPI.test.ts
+describe("スケジュールAPI", () => {
+  describe("予定作成", () => {
+    it("新規予定を作成できる", () => {
+      // テストケース
+    });
+
+    it("重複する時間帯をチェックする", () => {
+      // テストケース
+    });
+
+    it("参加者の予定を確認する", () => {
+      // テストケース
+    });
+  });
+
+  describe("カレンダー同期", () => {
+    it("外部カレンダーと同期できる", () => {
+      // テストケース
+    });
+
+    it("同期エラーを適切に処理する", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 9.5 KPI API
+
+```typescript
+// tests/api/kpi/KPIAPI.test.ts
+describe("KPI API", () => {
+  describe("KPIデータ取得", () => {
+    it("期間指定でKPIデータを取得できる", () => {
+      // テストケース
+    });
+
+    it("複数指標を同時に取得できる", () => {
+      // テストケース
+    });
+
+    it("集計データを取得できる", () => {
+      // テストケース
+    });
+  });
+
+  describe("KPI更新", () => {
+    it("KPI値を更新できる", () => {
+      // テストケース
+    });
+
+    it("履歴を保持する", () => {
+      // テストケース
+    });
+
+    it("不正な値でエラーを返す", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 9.6 ファイル処理 API
+
+```typescript
+// tests/api/files/FileAPI.test.ts
+describe("ファイル処理API", () => {
+  describe("ファイルアップロード", () => {
+    it("許可された形式のファイルをアップロードできる", () => {
+      // テストケース
+    });
+
+    it("サイズ制限を超えるファイルでエラーを返す", () => {
+      // テストケース
+    });
+
+    it("不正な形式のファイルでエラーを返す", () => {
+      // テストケース
+    });
+  });
+
+  describe("ファイル分析", () => {
+    it("Excelファイルを分析できる", () => {
+      // テストケース
+    });
+
+    it("PDFファイルを分析できる", () => {
+      // テストケース
+    });
+
+    it("分析エラーを適切に処理する", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 9.7 エラーハンドリング
+
+```typescript
+// tests/api/error/ErrorHandling.test.ts
+describe("エラーハンドリング", () => {
+  describe("バリデーションエラー", () => {
+    it("適切なエラーメッセージを返す", () => {
+      // テストケース
+    });
+
+    it("複数のエラーを一度に返せる", () => {
+      // テストケース
+    });
+  });
+
+  describe("システムエラー", () => {
+    it("安全なエラーメッセージを返す", () => {
+      // テストケース
+    });
+
+    it("エラーログを記録する", () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### 9.8 API テストのベストプラクティス
+
+1. テスト環境の分離
+
+   - テスト用のデータベース
+   - モックサーバー
+   - 環境変数の管理
+
+2. テストデータの管理
+
+   - フィクスチャーの活用
+   - シードデータの準備
+   - テストデータのクリーンアップ
+
+3. 非同期処理のテスト
+
+   - Promise の適切な処理
+   - タイムアウトの設定
+   - レースコンディションの考慮
+
+4. セキュリティテスト
+
+   - 認証のバイパス試行
+   - SQL インジェクション
+   - XSS 攻撃
+
+5. パフォーマンステスト
+   - レスポンス時間の計測
+   - 同時リクエストの処理
+   - メモリ使用量の監視

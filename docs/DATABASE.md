@@ -1,78 +1,127 @@
-# データベース定義書
+# COO 前田くん AI データベース定義書
 
 ## ER 図
 
 ```mermaid
 erDiagram
-    Users ||--o{ Templates : creates
-    Users ||--o{ CustomTemplates : owns
-    Templates ||--o{ CustomTemplates : based_on
-    CustomTemplates ||--o{ GenerationHistories : has
-    CustomTemplates ||--o{ ExportHistories : has
-    CustomTemplates ||--o{ CustomizationHistories : has
+    Users ||--o{ ChatSessions : has
+    Users ||--o{ Tasks : owns
+    Users ||--o{ Schedules : manages
+    Users ||--o{ KPIs : tracks
+    ChatSessions ||--o{ ChatMessages : contains
+    ChatMessages ||--o{ Attachments : has
+    ChatMessages ||--o{ Actions : triggers
+    Tasks ||--o{ TaskHistories : logs
+    KPIs ||--o{ KPIHistories : records
 
     Users {
-        string id PK
+        uuid id PK
         string email
         string name
-        string password_hash
-        datetime created_at
-        datetime updated_at
+        string avatar_url
+        jsonb preferences
+        timestamp created_at
+        timestamp updated_at
     }
 
-    Templates {
-        string id PK
-        string user_id FK
+    ChatSessions {
+        uuid id PK
+        uuid user_id FK
+        string title
+        jsonb context
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+        timestamp last_message_at
+    }
+
+    ChatMessages {
+        uuid id PK
+        uuid session_id FK
+        text content
+        text role
+        jsonb context
+        jsonb metadata
+        timestamp created_at
+    }
+
+    Actions {
+        uuid id PK
+        uuid message_id FK
+        string action_type
+        jsonb parameters
+        string status
+        jsonb result
+        timestamp created_at
+        timestamp completed_at
+    }
+
+    Tasks {
+        uuid id PK
+        uuid user_id FK
+        uuid message_id FK
+        string title
+        text description
+        string status
+        int priority
+        timestamp due_date
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    TaskHistories {
+        uuid id PK
+        uuid task_id FK
+        string action
+        jsonb changes
+        timestamp created_at
+    }
+
+    Schedules {
+        uuid id PK
+        uuid user_id FK
+        uuid message_id FK
+        string title
+        text description
+        timestamp start_time
+        timestamp end_time
+        string location
+        jsonb attendees
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    KPIs {
+        uuid id PK
+        uuid user_id FK
         string name
-        string description
-        string thumbnail_url
         string category
-        json tags
-        json content
-        json metadata
-        datetime created_at
-        datetime updated_at
+        numeric target_value
+        numeric current_value
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
     }
 
-    CustomTemplates {
-        string id PK
-        string user_id FK
-        string template_id FK
-        string name
-        string description
-        json content
-        json customizations
-        boolean is_published
-        datetime created_at
-        datetime updated_at
+    KPIHistories {
+        uuid id PK
+        uuid kpi_id FK
+        numeric value
+        jsonb metadata
+        timestamp recorded_at
     }
 
-    GenerationHistories {
-        string id PK
-        string custom_template_id FK
-        string prompt
-        json context
-        json result
-        string status
-        datetime created_at
-    }
-
-    CustomizationHistories {
-        string id PK
-        string custom_template_id FK
-        json changes
-        int version
-        datetime created_at
-    }
-
-    ExportHistories {
-        string id PK
-        string custom_template_id FK
-        string format
-        string status
-        string output_url
-        json metadata
-        datetime created_at
+    Attachments {
+        uuid id PK
+        uuid message_id FK
+        string file_name
+        string file_type
+        string file_url
+        bigint file_size
+        jsonb metadata
+        timestamp created_at
     }
 ```
 
@@ -80,128 +129,201 @@ erDiagram
 
 ### Users（ユーザー）
 
-| カラム名      | 型       | NULL | 説明                     |
-| ------------- | -------- | ---- | ------------------------ |
-| id            | string   | NO   | プライマリーキー、UUID   |
-| email         | string   | NO   | メールアドレス、ユニーク |
-| name          | string   | NO   | ユーザー名               |
-| password_hash | string   | NO   | パスワードハッシュ       |
-| created_at    | datetime | NO   | 作成日時                 |
-| updated_at    | datetime | NO   | 更新日時                 |
+| カラム名    | 型        | NULL | 説明                 |
+| ----------- | --------- | ---- | -------------------- |
+| id          | uuid      | NO   | プライマリーキー     |
+| email       | string    | NO   | メールアドレス       |
+| name        | string    | NO   | 名前                 |
+| avatar_url  | string    | YES  | プロフィール画像 URL |
+| preferences | jsonb     | YES  | ユーザー設定         |
+| created_at  | timestamp | NO   | 作成日時             |
+| updated_at  | timestamp | NO   | 更新日時             |
 
-### Templates（テンプレート）
+### ChatSessions（チャットセッション）
 
-| カラム名      | 型       | NULL | 説明                                   |
-| ------------- | -------- | ---- | -------------------------------------- |
-| id            | string   | NO   | プライマリーキー、UUID                 |
-| user_id       | string   | YES  | 作成者 ID（NULL=システムテンプレート） |
-| name          | string   | NO   | テンプレート名                         |
-| description   | string   | NO   | 説明                                   |
-| thumbnail_url | string   | NO   | サムネイル画像 URL                     |
-| category      | string   | NO   | カテゴリー                             |
-| tags          | json     | YES  | タグ配列                               |
-| content       | json     | NO   | テンプレートの内容（HTML/CSS）         |
-| metadata      | json     | YES  | メタデータ                             |
-| created_at    | datetime | NO   | 作成日時                               |
-| updated_at    | datetime | NO   | 更新日時                               |
+| カラム名        | 型        | NULL | 説明                   |
+| --------------- | --------- | ---- | ---------------------- |
+| id              | uuid      | NO   | プライマリーキー       |
+| user_id         | uuid      | NO   | ユーザー ID            |
+| title           | string    | YES  | セッションタイトル     |
+| context         | jsonb     | YES  | セッションコンテキスト |
+| metadata        | jsonb     | YES  | メタデータ             |
+| created_at      | timestamp | NO   | 作成日時               |
+| updated_at      | timestamp | NO   | 更新日時               |
+| last_message_at | timestamp | NO   | 最終メッセージ日時     |
 
-### CustomTemplates（カスタマイズされたテンプレート）
+### ChatMessages（チャットメッセージ）
 
-| カラム名       | 型       | NULL | 説明                   |
-| -------------- | -------- | ---- | ---------------------- |
-| id             | string   | NO   | プライマリーキー、UUID |
-| user_id        | string   | NO   | 所有者 ID              |
-| template_id    | string   | NO   | 元テンプレート ID      |
-| name           | string   | NO   | プロジェクト名         |
-| description    | string   | YES  | 説明                   |
-| content        | json     | NO   | カスタマイズされた内容 |
-| customizations | json     | NO   | カスタマイズ設定       |
-| is_published   | boolean  | NO   | 公開フラグ             |
-| created_at     | datetime | NO   | 作成日時               |
-| updated_at     | datetime | NO   | 更新日時               |
+| カラム名   | 型        | NULL | 説明                   |
+| ---------- | --------- | ---- | ---------------------- |
+| id         | uuid      | NO   | プライマリーキー       |
+| session_id | uuid      | NO   | セッション ID          |
+| content    | text      | NO   | メッセージ内容         |
+| role       | text      | NO   | user/assistant         |
+| context    | jsonb     | YES  | メッセージコンテキスト |
+| metadata   | jsonb     | YES  | メタデータ             |
+| created_at | timestamp | NO   | 作成日時               |
 
-### GenerationHistories（生成履歴）
+### Actions（アクション）
 
-| カラム名           | 型       | NULL | 説明                    |
-| ------------------ | -------- | ---- | ----------------------- |
-| id                 | string   | NO   | プライマリーキー、UUID  |
-| custom_template_id | string   | NO   | カスタムテンプレート ID |
-| prompt             | string   | NO   | 生成プロンプト          |
-| context            | json     | YES  | 生成コンテキスト        |
-| result             | json     | NO   | 生成結果                |
-| status             | string   | NO   | 生成ステータス          |
-| created_at         | datetime | NO   | 作成日時                |
+| カラム名     | 型        | NULL | 説明             |
+| ------------ | --------- | ---- | ---------------- |
+| id           | uuid      | NO   | プライマリーキー |
+| message_id   | uuid      | NO   | メッセージ ID    |
+| action_type  | string    | NO   | アクション種別   |
+| parameters   | jsonb     | YES  | パラメータ       |
+| status       | string    | NO   | 実行状態         |
+| result       | jsonb     | YES  | 実行結果         |
+| created_at   | timestamp | NO   | 作成日時         |
+| completed_at | timestamp | YES  | 完了日時         |
 
-### CustomizationHistories（カスタマイズ履歴）
+### Tasks（タスク）
 
-| カラム名           | 型       | NULL | 説明                    |
-| ------------------ | -------- | ---- | ----------------------- |
-| id                 | string   | NO   | プライマリーキー、UUID  |
-| custom_template_id | string   | NO   | カスタムテンプレート ID |
-| changes            | json     | NO   | 変更内容                |
-| version            | int      | NO   | バージョン番号          |
-| created_at         | datetime | NO   | 作成日時                |
+| カラム名    | 型        | NULL | 説明                |
+| ----------- | --------- | ---- | ------------------- |
+| id          | uuid      | NO   | プライマリーキー    |
+| user_id     | uuid      | NO   | ユーザー ID         |
+| message_id  | uuid      | YES  | 作成元メッセージ ID |
+| title       | string    | NO   | タスクタイトル      |
+| description | text      | YES  | 詳細説明            |
+| status      | string    | NO   | ステータス          |
+| priority    | int       | NO   | 優先度              |
+| due_date    | timestamp | YES  | 期限                |
+| metadata    | jsonb     | YES  | メタデータ          |
+| created_at  | timestamp | NO   | 作成日時            |
+| updated_at  | timestamp | NO   | 更新日時            |
 
-### ExportHistories（エクスポート履歴）
+### TaskHistories（タスク履歴）
 
-| カラム名           | 型       | NULL | 説明                    |
-| ------------------ | -------- | ---- | ----------------------- |
-| id                 | string   | NO   | プライマリーキー、UUID  |
-| custom_template_id | string   | NO   | カスタムテンプレート ID |
-| format             | string   | NO   | エクスポート形式        |
-| status             | string   | NO   | エクスポートステータス  |
-| output_url         | string   | YES  | 出力ファイル URL        |
-| metadata           | json     | YES  | メタデータ              |
-| created_at         | datetime | NO   | 作成日時                |
+| カラム名   | 型        | NULL | 説明             |
+| ---------- | --------- | ---- | ---------------- |
+| id         | uuid      | NO   | プライマリーキー |
+| task_id    | uuid      | NO   | タスク ID        |
+| action     | string    | NO   | アクション種別   |
+| changes    | jsonb     | NO   | 変更内容         |
+| created_at | timestamp | NO   | 作成日時         |
+
+### Schedules（スケジュール）
+
+| カラム名    | 型        | NULL | 説明                |
+| ----------- | --------- | ---- | ------------------- |
+| id          | uuid      | NO   | プライマリーキー    |
+| user_id     | uuid      | NO   | ユーザー ID         |
+| message_id  | uuid      | YES  | 作成元メッセージ ID |
+| title       | string    | NO   | 予定タイトル        |
+| description | text      | YES  | 詳細説明            |
+| start_time  | timestamp | NO   | 開始時間            |
+| end_time    | timestamp | NO   | 終了時間            |
+| location    | string    | YES  | 場所/URL            |
+| attendees   | jsonb     | YES  | 参加者情報          |
+| metadata    | jsonb     | YES  | メタデータ          |
+| created_at  | timestamp | NO   | 作成日時            |
+| updated_at  | timestamp | NO   | 更新日時            |
+
+### KPIs（KPI 管理）
+
+| カラム名      | 型        | NULL | 説明             |
+| ------------- | --------- | ---- | ---------------- |
+| id            | uuid      | NO   | プライマリーキー |
+| user_id       | uuid      | NO   | ユーザー ID      |
+| name          | string    | NO   | KPI 名           |
+| category      | string    | NO   | カテゴリー       |
+| target_value  | numeric   | NO   | 目標値           |
+| current_value | numeric   | NO   | 現在値           |
+| metadata      | jsonb     | YES  | メタデータ       |
+| created_at    | timestamp | NO   | 作成日時         |
+| updated_at    | timestamp | NO   | 更新日時         |
+
+### KPIHistories（KPI 履歴）
+
+| カラム名    | 型        | NULL | 説明             |
+| ----------- | --------- | ---- | ---------------- |
+| id          | uuid      | NO   | プライマリーキー |
+| kpi_id      | uuid      | NO   | KPI ID           |
+| value       | numeric   | NO   | 記録値           |
+| metadata    | jsonb     | YES  | メタデータ       |
+| recorded_at | timestamp | NO   | 記録日時         |
+
+### Attachments（添付ファイル）
+
+| カラム名   | 型        | NULL | 説明             |
+| ---------- | --------- | ---- | ---------------- |
+| id         | uuid      | NO   | プライマリーキー |
+| message_id | uuid      | NO   | メッセージ ID    |
+| file_name  | string    | NO   | ファイル名       |
+| file_type  | string    | NO   | ファイルタイプ   |
+| file_url   | string    | NO   | 保存 URL         |
+| file_size  | bigint    | NO   | ファイルサイズ   |
+| metadata   | jsonb     | YES  | メタデータ       |
+| created_at | timestamp | NO   | 作成日時         |
 
 ## インデックス
 
-### Users
+### ChatSessions
 
-- email (UNIQUE)
+- user_id
+- last_message_at
 
-### Templates
+### ChatMessages
+
+- session_id
+- created_at
+
+### Actions
+
+- message_id
+- action_type
+- status
+- created_at
+
+### Tasks
+
+- user_id
+- message_id
+- status
+- due_date
+
+### Schedules
+
+- user_id
+- message_id
+- start_time
+- end_time
+
+### KPIs
 
 - user_id
 - category
-- tags
 
-### CustomTemplates
+### Attachments
 
-- user_id
-- template_id
-- is_published
-
-### GenerationHistories
-
-- custom_template_id
-- created_at
-
-### CustomizationHistories
-
-- custom_template_id
-- version
-
-### ExportHistories
-
-- custom_template_id
-- created_at
+- message_id
+- file_type
 
 ## 制約
 
 ### 外部キー制約
 
-1. CustomTemplates.user_id → Users.id
-2. CustomTemplates.template_id → Templates.id
-3. GenerationHistories.custom_template_id → CustomTemplates.id
-4. CustomizationHistories.custom_template_id → CustomTemplates.id
-5. ExportHistories.custom_template_id → CustomTemplates.id
+1. ChatSessions.user_id → Users.id
+2. ChatMessages.session_id → ChatSessions.id
+3. Actions.message_id → ChatMessages.id
+4. Tasks.user_id → Users.id
+5. Tasks.message_id → ChatMessages.id
+6. Schedules.user_id → Users.id
+7. Schedules.message_id → ChatMessages.id
+8. KPIs.user_id → Users.id
+9. KPIHistories.kpi_id → KPIs.id
+10. Attachments.message_id → ChatMessages.id
 
 ### その他の制約
 
-1. Users.email は有効なメールアドレス形式
-2. Templates.category は定義された値のみ
-3. GenerationHistories.status は ['pending', 'processing', 'completed', 'failed'] のいずれか
-4. ExportHistories.status は ['pending', 'processing', 'completed', 'failed'] のいずれか
-5. ExportHistories.format は ['html', 'static', 'wordpress'] のいずれか
-   </rewritten_file>
+1. Tasks.status は ['未着手', '進行中', '完了', '保留'] のいずれか
+2. Tasks.priority は 1-5 の整数
+3. KPIs.category は定義された値のいずれか
+4. Schedules.end_time > Schedules.start_time
+5. Actions.status は ['pending', 'in_progress', 'completed', 'failed'] のいずれか
+
+```
+
+</rewritten_file>
+```
