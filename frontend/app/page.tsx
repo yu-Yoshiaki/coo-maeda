@@ -1,9 +1,10 @@
-import App from "./App"
+import { ChatInterface } from "@/components/chat/ChatInterface"
+import { MainLayout } from "@/components/layout/MainLayout"
 
-export default function Page() {
+export default function Home() {
   return (
-    <main>
-      <App />
-    </main>
+    <MainLayout>
+      <ChatInterface />
+    </MainLayout>
   )
 }
