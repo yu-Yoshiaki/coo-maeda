@@ -1,64 +1,32 @@
-import type { ScheduleAnalyzerInput, ScheduleInfo } from "./types"
+import type { Schedule } from "@/features/schedule/types"
 import { openai } from "@/lib/openai"
-import { datetimePrompt, schedulePrompt } from "./prompts"
-import { parseDateTimeResponse, parseScheduleResponse } from "./utils/parser"
 
-class ScheduleAnalyzer {
-  async analyze(input: ScheduleAnalyzerInput): Promise<ScheduleInfo> {
-    const { text, contextDate = new Date() } = input
-
-    // 日時情報の抽出
-    const dateTimeInfo = await this.extractDateTime(text, contextDate)
-
-    // スケジュール情報の抽出
-    const prompt = schedulePrompt
-      .replace("{{text}}", text)
-      .replace("{{contextDate}}", contextDate.toISOString())
-
-    const completion = await openai.chat.completions.create({
+export async function analyzeSchedule(text: string): Promise<Schedule> {
+  try {
+    const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: prompt,
+          content: "あなたは予定管理アシスタントです。ユーザーの入力から予定の情報を抽出し、JSON形式で返してください。",
+        },
+        {
+          role: "user",
+          content: text,
         },
       ],
-      temperature: 0.3,
-      response_format: { type: "json_object" },
     })
 
-    const response = JSON.parse(completion.choices[0].message.content!)
-    const scheduleInfo = parseScheduleResponse(response)
-
-    // 日時情報を上書き
-    return {
-      ...scheduleInfo,
-      startDate: dateTimeInfo.startDate,
-      endDate: dateTimeInfo.endDate,
-      isAllDay: dateTimeInfo.isAllDay,
+    const content = response.choices[0]?.message?.content
+    if (!content) {
+      throw new Error("APIからの応答が不正です")
     }
+
+    const schedule = JSON.parse(content)
+    return schedule
   }
-
-  private async extractDateTime(text: string, contextDate: Date) {
-    const prompt = datetimePrompt
-      .replace("{{text}}", text)
-      .replace("{{contextDate}}", contextDate.toISOString())
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      response_format: { type: "json_object" },
-    })
-
-    const response = JSON.parse(completion.choices[0].message.content!)
-    return parseDateTimeResponse(response)
+  catch (error) {
+    console.error("予定の解析に失敗しました:", error)
+    throw new Error("予定の解析に失敗しました")
   }
 }
-
-export const scheduleAnalyzer = new ScheduleAnalyzer()

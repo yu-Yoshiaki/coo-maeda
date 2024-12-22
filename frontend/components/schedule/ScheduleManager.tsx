@@ -1,136 +1,57 @@
 "use client"
 
 import type { Schedule } from "@/lib/validations/schedule"
-import { useEffect, useState } from "react"
-import { NaturalLanguageInput } from "./NaturalLanguageInput"
+import { useSchedule } from "@/hooks/schedule/useSchedule"
+import { useScheduleAnalyzer } from "@/hooks/schedule/useScheduleAnalyzer"
+import { useState } from "react"
 import { ScheduleCalendar } from "./ScheduleCalendar"
-import { ScheduleForm } from "./ScheduleForm"
 
 export function ScheduleManager() {
-  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [text, setText] = useState("")
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
+  const { schedules, createSchedule, updateSchedule, deleteSchedule } = useSchedule()
+  const { analyzeSchedule } = useScheduleAnalyzer()
 
-  // スケジュール一覧の取得
-  const fetchSchedules = async () => {
-    try {
-      const response = await fetch("/api/schedules")
-      if (!response.ok) {
-        throw new Error("スケジュールの取得に失敗しました")
-      }
-      const data = await response.json()
-      setSchedules(data)
-    }
-    catch (error) {
-      console.error("Error fetching schedules:", error)
-      alert(error instanceof Error ? error.message : "スケジュールの取得に失敗しました")
-    }
-  }
-
-  // スケジュールの作成
-  const createSchedule = async (data: Partial<Schedule>) => {
-    try {
-      setIsLoading(true)
-      const response = await fetch("/api/schedules", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error("スケジュールの作成に失敗しました")
-      }
-
-      await fetchSchedules()
-      setIsEditing(false)
-    }
-    catch (error) {
-      console.error("Error creating schedule:", error)
-      alert(error instanceof Error ? error.message : "スケジュールの作成に失敗しました")
-    }
-    finally {
-      setIsLoading(false)
-    }
-  }
-
-  // スケジュールの更新
-  const updateSchedule = async (data: Partial<Schedule>) => {
-    if (!selectedSchedule?.id)
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!text)
       return
 
     try {
-      setIsLoading(true)
-      const response = await fetch(`/api/schedules/${selectedSchedule.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error("スケジュールの更新に失敗しました")
+      const schedule = await analyzeSchedule(text)
+      if (selectedSchedule) {
+        await updateSchedule(selectedSchedule.id, schedule)
       }
-
-      await fetchSchedules()
+      else {
+        await createSchedule(schedule)
+      }
+      setText("")
       setSelectedSchedule(null)
-      setIsEditing(false)
     }
     catch (error) {
-      console.error("Error updating schedule:", error)
-      alert(error instanceof Error ? error.message : "スケジュールの更新に失敗しました")
-    }
-    finally {
-      setIsLoading(false)
+      console.error(error)
+      alert("予定の解析に失敗しました")
     }
   }
 
-  // スケジュールの削除
-  const deleteSchedule = async (id: string) => {
-    if (!confirm("このスケジュールを削除してもよろしいですか？"))
+  const handleSelectEvent = (schedule: Schedule) => {
+    setSelectedSchedule(schedule)
+    setText(`${schedule.title}を${schedule.startDate}から${schedule.endDate}まで${schedule.location}で`)
+  }
+
+  const handleDelete = async () => {
+    if (!selectedSchedule)
       return
-
     try {
-      setIsLoading(true)
-      const response = await fetch(`/api/schedules/${id}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        throw new Error("スケジュールの削除に失敗しました")
-      }
-
-      await fetchSchedules()
+      await deleteSchedule(selectedSchedule.id)
+      setText("")
       setSelectedSchedule(null)
     }
     catch (error) {
-      console.error("Error deleting schedule:", error)
-      alert(error instanceof Error ? error.message : "スケジュールの削除に失敗しました")
-    }
-    finally {
-      setIsLoading(false)
+      console.error(error)
+      alert("予定の削除に失敗しました")
     }
   }
-
-  // スケジュールの選択
-  const handleSelectEvent = (event: Schedule) => {
-    setSelectedSchedule(event)
-    setIsEditing(true)
-  }
-
-  // 新規スケジュールの作成
-  const handleSelectSlot = ({ start, end }: { start: Date, end: Date }) => {
-    setSelectedSchedule(null)
-    setIsEditing(true)
-  }
-
-  // 初期データの取得
-  useEffect(() => {
-    fetchSchedules()
-  }, [])
 
   return (
     <div className="space-y-8">
@@ -139,43 +60,46 @@ export function ScheduleManager() {
           <ScheduleCalendar
             schedules={schedules}
             onSelectEvent={handleSelectEvent}
-            onSelectSlot={handleSelectSlot}
           />
         </div>
-
-        <div className="space-y-8">
-          <NaturalLanguageInput
-            onSubmit={createSchedule}
-            isLoading={isLoading}
-          />
-
-          {isEditing && (
-            <div className="rounded border p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-medium">
-                  {selectedSchedule ? "予定の編集" : "新規予定の作成"}
-                </h2>
-                {selectedSchedule && (
-                  <button
-                    onClick={() => deleteSchedule(selectedSchedule.id!)}
-                    className="text-sm text-red-600 hover:text-red-700"
-                    disabled={isLoading}
-                  >
-                    削除
-                  </button>
-                )}
-              </div>
-
-              <ScheduleForm
-                initialData={selectedSchedule || undefined}
-                onSubmit={selectedSchedule ? updateSchedule : createSchedule}
-                onCancel={() => {
-                  setSelectedSchedule(null)
-                  setIsEditing(false)
-                }}
+        <div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="text"
+                className="block text-sm font-medium text-gray-700"
+              >
+                予定を自然な言葉で入力
+              </label>
+              <textarea
+                id="text"
+                rows={3}
+                className="mt-1 block w-full rounded-md border p-2"
+                placeholder="例: 明日の14時から1時間、会議室Aでミーティング"
+                value={text}
+                onChange={e => setText(e.target.value)}
+                required
               />
             </div>
-          )}
+            <div className="flex justify-between">
+              <button
+                type="submit"
+                className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                解析
+              </button>
+              {selectedSchedule && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  aria-label="削除"
+                >
+                  削除
+                </button>
+              )}
+            </div>
+          </form>
         </div>
       </div>
     </div>

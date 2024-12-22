@@ -18,8 +18,8 @@ export function ScheduleForm({
     initialData || {
       title: "",
       description: "",
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: new Date().toISOString().slice(0, 16),
+      endDate: new Date().toISOString().slice(0, 16),
       isAllDay: false,
       location: "",
     },
@@ -67,9 +67,8 @@ export function ScheduleForm({
           <input
             type="datetime-local"
             id="startDate"
-            value={formData.startDate?.toISOString().slice(0, 16)}
-            onChange={e =>
-              setFormData({ ...formData, startDate: new Date(e.target.value) })}
+            value={formData.startDate}
+            onChange={e => setFormData({ ...formData, startDate: e.target.value })}
             className="mt-1 block w-full rounded-md border p-2"
             required
           />
@@ -82,9 +81,8 @@ export function ScheduleForm({
           <input
             type="datetime-local"
             id="endDate"
-            value={formData.endDate?.toISOString().slice(0, 16)}
-            onChange={e =>
-              setFormData({ ...formData, endDate: new Date(e.target.value) })}
+            value={formData.endDate}
+            onChange={e => setFormData({ ...formData, endDate: e.target.value })}
             className="mt-1 block w-full rounded-md border p-2"
             required
           />

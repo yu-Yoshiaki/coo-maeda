@@ -18,24 +18,26 @@ const localizer = dateFnsLocalizer({
 })
 
 interface ScheduleCalendarProps {
-  schedules: Schedule[]
+  schedules?: Schedule[]
   onSelectEvent?: (event: Schedule) => void
   onSelectSlot?: (slotInfo: { start: Date, end: Date }) => void
 }
 
 export function ScheduleCalendar({
-  schedules,
+  schedules = [],
   onSelectEvent,
   onSelectSlot,
 }: ScheduleCalendarProps) {
-  const events = schedules.map(schedule => ({
-    ...schedule,
-    start: new Date(schedule.startDate),
-    end: new Date(schedule.endDate),
-  }))
+  const events = Array.isArray(schedules)
+    ? schedules.map(schedule => ({
+        ...schedule,
+        start: new Date(schedule.startDate),
+        end: new Date(schedule.endDate),
+      }))
+    : []
 
   return (
-    <div className="h-[600px]">
+    <div className="h-[600px]" role="grid">
       <Calendar
         localizer={localizer}
         events={events}

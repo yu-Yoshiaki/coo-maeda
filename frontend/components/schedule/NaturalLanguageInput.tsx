@@ -37,7 +37,8 @@ export function NaturalLanguageInput({
     }
     catch (error) {
       console.error("Error processing natural language input:", error)
-      alert(error instanceof Error ? error.message : "スケジュールの���析に失敗しました")
+      // eslint-disable-next-line no-alert
+      alert(error instanceof Error ? error.message : "スケジュールの解析に失敗しました")
     }
   }
 

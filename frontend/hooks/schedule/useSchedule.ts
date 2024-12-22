@@ -1,145 +1,118 @@
-import type {
-  NaturalLanguageScheduleInput,
-  ScheduleCreateInput,
-  ScheduleFilter,
-  ScheduleUpdateInput,
-} from "@/types/schedule"
-import { scheduleApi } from "@/features/api/schedule"
-import {
-  Schedule,
-} from "@/types/schedule"
-import { useCallback, useState } from "react"
+import type { Schedule } from "@/lib/validations/schedule"
+import { useEffect, useState } from "react"
 
 export function useSchedule() {
+  const [schedules, setSchedules] = useState<Schedule[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
-  // スケジュールの作成
-  const createSchedule = useCallback(async (input: ScheduleCreateInput) => {
-    setLoading(true)
-    setError(null)
+  const fetchSchedules = async () => {
     try {
-      const schedule = await scheduleApi.createSchedule(input)
-      return schedule
+      setLoading(true)
+      const response = await fetch("/api/schedules")
+      if (!response.ok) {
+        throw new Error("スケジュールの取得に失敗しました")
+      }
+      const data = await response.json()
+      setSchedules(data)
     }
-    catch (err) {
-      setError(err as Error)
-      throw err
+    catch (error) {
+      console.error("Error fetching schedules:", error)
+      setError(error instanceof Error ? error : new Error("スケジュールの取得に失敗しました"))
     }
     finally {
       setLoading(false)
     }
-  }, [])
+  }
 
-  // スケジュールの更新
-  const updateSchedule = useCallback(async (id: string, input: ScheduleUpdateInput) => {
-    setLoading(true)
-    setError(null)
+  const createSchedule = async (input: Partial<Schedule>): Promise<Schedule> => {
     try {
-      const schedule = await scheduleApi.updateSchedule(id, input)
-      return schedule
-    }
-    catch (err) {
-      setError(err as Error)
-      throw err
-    }
-    finally {
-      setLoading(false)
-    }
-  }, [])
+      setLoading(true)
+      const response = await fetch("/api/schedules", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      })
 
-  // スケジュールの削除
-  const deleteSchedule = useCallback(async (id: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      await scheduleApi.deleteSchedule(id)
-    }
-    catch (err) {
-      setError(err as Error)
-      throw err
-    }
-    finally {
-      setLoading(false)
-    }
-  }, [])
+      if (!response.ok) {
+        throw new Error("スケジュールの作成に失敗しました")
+      }
 
-  // スケジュールの取得
-  const getSchedule = useCallback(async (id: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const schedule = await scheduleApi.getSchedule(id)
-      return schedule
+      const data = await response.json()
+      await fetchSchedules()
+      return data
     }
-    catch (err) {
-      setError(err as Error)
-      throw err
+    catch (error) {
+      console.error("Error creating schedule:", error)
+      throw error
     }
     finally {
       setLoading(false)
     }
-  }, [])
+  }
 
-  // スケジュール一覧の取得
-  const getSchedules = useCallback(async (filter: ScheduleFilter) => {
-    setLoading(true)
-    setError(null)
+  const updateSchedule = async (id: string, input: Partial<Schedule>): Promise<Schedule> => {
     try {
-      const schedules = await scheduleApi.getSchedules(filter)
-      return schedules
-    }
-    catch (err) {
-      setError(err as Error)
-      throw err
-    }
-    finally {
-      setLoading(false)
-    }
-  }, [])
+      setLoading(true)
+      const response = await fetch(`/api/schedules/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      })
 
-  // 自然言語からのスケジュール作成
-  const createFromNaturalLanguage = useCallback(async (input: NaturalLanguageScheduleInput) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const schedule = await scheduleApi.createFromNaturalLanguage(input)
-      return schedule
-    }
-    catch (err) {
-      setError(err as Error)
-      throw err
-    }
-    finally {
-      setLoading(false)
-    }
-  }, [])
+      if (!response.ok) {
+        throw new Error("スケジュールの更新に失敗しました")
+      }
 
-  // 外部カレンダーとの同期
-  const syncWithExternalCalendar = useCallback(async (calendarId: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      await scheduleApi.syncWithExternalCalendar(calendarId)
+      const data = await response.json()
+      await fetchSchedules()
+      return data
     }
-    catch (err) {
-      setError(err as Error)
-      throw err
+    catch (error) {
+      console.error("Error updating schedule:", error)
+      throw error
     }
     finally {
       setLoading(false)
     }
+  }
+
+  const deleteSchedule = async (id: string): Promise<void> => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/schedules/${id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("スケジュールの削除に失敗しました")
+      }
+
+      await fetchSchedules()
+    }
+    catch (error) {
+      console.error("Error deleting schedule:", error)
+      throw error
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSchedules()
   }, [])
 
   return {
+    schedules,
     loading,
     error,
     createSchedule,
     updateSchedule,
     deleteSchedule,
-    getSchedule,
-    getSchedules,
-    createFromNaturalLanguage,
-    syncWithExternalCalendar,
   }
 }
