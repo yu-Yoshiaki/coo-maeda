@@ -31,7 +31,7 @@ export function ScheduleForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" role="form">
       <div>
         <label htmlFor="title" className="block text-sm font-medium">
           タイトル

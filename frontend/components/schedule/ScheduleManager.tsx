@@ -20,7 +20,7 @@ export function ScheduleManager() {
     try {
       const schedule = await analyzeSchedule(text)
       if (selectedSchedule) {
-        await updateSchedule(selectedSchedule.id, schedule)
+        await updateSchedule(selectedSchedule.id!, schedule)
       }
       else {
         await createSchedule(schedule)
@@ -43,7 +43,7 @@ export function ScheduleManager() {
     if (!selectedSchedule)
       return
     try {
-      await deleteSchedule(selectedSchedule.id)
+      await deleteSchedule(selectedSchedule.id!)
       setText("")
       setSelectedSchedule(null)
     }

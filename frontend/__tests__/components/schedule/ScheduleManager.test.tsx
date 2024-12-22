@@ -1,24 +1,44 @@
+import type { Schedule } from "@/lib/validations/schedule"
 import { ScheduleManager } from "@/components/schedule/ScheduleManager"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { act } from "react"
 
-// モックの設定
+// モックのスケジュール
+const mockSchedule = {
+  id: "1",
+  title: "ミーティング",
+  startDate: new Date("2024-01-01T14:00:00").toISOString(),
+  endDate: new Date("2024-01-01T15:00:00").toISOString(),
+  location: "会議室A",
+  isAllDay: false,
+}
+
+// react-big-calendarのモック
+jest.mock("react-big-calendar", () => ({
+  Calendar: ({
+    events,
+    onSelectEvent,
+  }: {
+    events: Schedule[]
+    onSelectEvent: (event: Schedule) => void
+  }) => (
+    <div data-testid="mock-calendar">
+      {events.map((event: Schedule) => (
+        <button key={event.id} onClick={() => onSelectEvent(event)}>
+          {event.title}
+        </button>
+      ))}
+    </div>
+  ),
+  dateFnsLocalizer: () => ({}),
+}))
+
+// カスタムフックのモック
 const mockCreateSchedule = jest.fn()
 const mockUpdateSchedule = jest.fn()
 const mockDeleteSchedule = jest.fn()
 const mockAnalyzeSchedule = jest.fn()
 
-// モックスケジュール
-const mockSchedule = {
-  id: "1",
-  title: "ミーティング",
-  startDate: "2024-01-01T14:00:00",
-  endDate: "2024-01-01T15:00:00",
-  location: "会議室A",
-  isAllDay: false,
-}
-
-// モックの設定
 jest.mock("@/hooks/schedule/useSchedule", () => ({
   useSchedule: () => ({
     schedules: [mockSchedule],
@@ -45,16 +65,15 @@ describe("scheduleManager", () => {
   it("スケジュールを作成できる", async () => {
     render(<ScheduleManager />)
 
-    // テキストエリアに予定を入力
-    const input = screen.getByRole("textbox")
+    // テキストを入力
+    const input = screen.getByLabelText("予定を自然な言葉で入力")
     fireEvent.change(input, {
       target: { value: "明日の14時から1時間、会議室Aでミーティング" },
     })
 
     // 解析ボタンをクリック
-    const button = screen.getByRole("button", { name: "解析" })
     await act(async () => {
-      fireEvent.click(button)
+      fireEvent.click(screen.getByRole("button", { name: "解析" }))
     })
 
     // APIが呼び出されることを確認
@@ -67,25 +86,18 @@ describe("scheduleManager", () => {
   it("スケジュールを更新できる", async () => {
     render(<ScheduleManager />)
 
-    // カレンダーのイベントをクリック
-    const calendar = screen.getByRole("grid")
-    const event = calendar.querySelector(".rbc-event")
-    if (event) {
-      await act(async () => {
-        fireEvent.click(event)
-      })
-    }
+    // スケジュールを選択
+    fireEvent.click(screen.getByText("ミーティング"))
 
-    // テキストエリアに予定を入力
-    const input = screen.getByRole("textbox")
+    // テキストを入力
+    const input = screen.getByLabelText("予定を自然な言葉で入力")
     fireEvent.change(input, {
       target: { value: "明日の15時から2時間、会議室Bでミーティング" },
     })
 
     // 解析ボタンをクリック
-    const button = screen.getByRole("button", { name: "解析" })
     await act(async () => {
-      fireEvent.click(button)
+      fireEvent.click(screen.getByRole("button", { name: "解析" }))
     })
 
     // APIが呼び出されることを確認
@@ -98,19 +110,12 @@ describe("scheduleManager", () => {
   it("スケジュールを削除できる", async () => {
     render(<ScheduleManager />)
 
-    // カレンダーのイベントをクリック
-    const calendar = screen.getByRole("grid")
-    const event = calendar.querySelector(".rbc-event")
-    if (event) {
-      await act(async () => {
-        fireEvent.click(event)
-      })
-    }
+    // スケジュールを選択
+    fireEvent.click(screen.getByText("ミーティング"))
 
     // 削除ボタンをクリック
-    const deleteButton = screen.getByRole("button", { name: "削除" })
     await act(async () => {
-      fireEvent.click(deleteButton)
+      fireEvent.click(screen.getByRole("button", { name: "削除" }))
     })
 
     // APIが呼び出されることを確認
