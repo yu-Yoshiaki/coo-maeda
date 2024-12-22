@@ -1,3 +1,4 @@
+/* eslint-disable node/prefer-global/process */
 import { createClient } from "@supabase/supabase-js"
 
 // 環境変数のチェック
@@ -15,15 +16,15 @@ export const supabase = createClient(
 )
 
 // 管理者権限を持つクライアントの作成（サーバーサイドのみで使用）
-if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  export const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+export const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
       },
-    },
-  )
-}
+    )
+  : null

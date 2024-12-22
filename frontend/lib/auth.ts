@@ -1,33 +1,21 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+/* eslint-disable node/prefer-global/process */
+import { createClient } from "@supabase/supabase-js"
 
-// 環境変数の型安全な取得
-function getEnvVar(key: string): string {
-  const value = process.env[key]
-  if (!value) {
-    throw new Error(`Missing environment variable: ${key}`)
-  }
-  return value
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Missing Supabase environment variables")
 }
 
-// 必要な環境変数を取得
-const supabaseUrl = getEnvVar("NEXT_PUBLIC_SUPABASE_URL")
-const supabaseKey = getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-
 export async function auth() {
-  const cookieStore = cookies()
-
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
     },
-  )
+  })
 
   const { data: { session } } = await supabase.auth.getSession()
   return session
