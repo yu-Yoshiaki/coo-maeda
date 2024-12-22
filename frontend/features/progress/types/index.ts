@@ -1,44 +1,44 @@
+// 進捗管理機能の型定義
+
+// タスクのステータス
+export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "BLOCKED" | "COMPLETED"
+
+// リスクの重要度
+export type RiskSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+
+// アラートの種類
+export type AlertType = "DELAY" | "RISK" | "MILESTONE" | "DEPENDENCY"
+
+// タスク
 export interface Task {
   id: string
   title: string
-  description: string
+  description?: string
   status: TaskStatus
   startDate: Date
   dueDate: Date
   assignedTo: string[]
-  dependencies: string[] // 依存タスクのID配列
-  progress: number // 0-100の進捗率
+  dependencies: string[]
+  progress: number
   createdAt: Date
   updatedAt: Date
+  createdBy: string
 }
 
-export enum TaskStatus {
-  NOT_STARTED = "NOT_STARTED",
-  IN_PROGRESS = "IN_PROGRESS",
-  BLOCKED = "BLOCKED",
-  COMPLETED = "COMPLETED",
-}
-
+// マイルストーン
 export interface Milestone {
   id: string
   title: string
   dueDate: Date
-  tasks: string[] // マイルストーンに関連するタスクのID配列
+  tasks: string[]
   progress: number
   status: TaskStatus
+  createdAt: Date
+  updatedAt: Date
+  createdBy: string
 }
 
-export interface ProgressReport {
-  id: string
-  title: string
-  generatedAt: Date
-  overallProgress: number
-  milestones: Milestone[]
-  tasks: Task[]
-  risks: Risk[]
-  recommendations: string[]
-}
-
+// リスク
 export interface Risk {
   id: string
   title: string
@@ -46,28 +46,70 @@ export interface Risk {
   severity: RiskSeverity
   impact: string
   mitigation: string
-  relatedTasks: string[] // 関連タスクのID配列
+  relatedTasks: string[]
+  createdAt: Date
+  updatedAt: Date
+  createdBy: string
 }
 
-export enum RiskSeverity {
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
-  CRITICAL = "CRITICAL",
-}
-
-export interface ProgressAlert {
+// アラート
+export interface Alert {
   id: string
   type: AlertType
   message: string
   taskId?: string
-  createdAt: Date
   isRead: boolean
+  createdAt: Date
+  updatedAt: Date
+  createdBy: string
 }
 
-export enum AlertType {
-  DELAY = "DELAY",
-  RISK = "RISK",
-  MILESTONE = "MILESTONE",
-  DEPENDENCY = "DEPENDENCY",
+// 進捗レポート
+export interface ProgressReport {
+  id: string
+  title: string
+  generatedAt: Date
+  overallProgress: number
+  milestones: string[]
+  tasks: string[]
+  risks: string[]
+  recommendations: string[]
+  createdBy: string
+}
+
+// APIレスポンス型
+export interface ApiResponse<T> {
+  data?: T
+  error?: {
+    message: string
+    code: string
+    details?: unknown
+  }
+}
+
+// 進捗更新リクエスト
+export interface UpdateProgressRequest {
+  taskId: string
+  progress: number
+  status?: TaskStatus
+  notes?: string
+}
+
+// 進捗分析結果
+export interface ProgressAnalysis {
+  currentProgress: number
+  estimatedCompletion: Date
+  riskFactors: string[]
+  recommendations: string[]
+  bottlenecks: string[]
+}
+
+// 進捗トラッカーの状態
+export interface ProgressTrackerState {
+  tasks: Task[]
+  milestones: Milestone[]
+  risks: Risk[]
+  alerts: Alert[]
+  loading: boolean
+  error?: string
 }

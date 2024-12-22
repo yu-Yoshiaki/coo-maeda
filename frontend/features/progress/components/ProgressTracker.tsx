@@ -167,7 +167,7 @@ export function ProgressTracker() {
         </div>
       </div>
 
-      {/* レ���ート生成ボタン */}
+      {/* レポート生成ボタン */}
       <div className="flex justify-end">
         <button
           onClick={generateReport}
