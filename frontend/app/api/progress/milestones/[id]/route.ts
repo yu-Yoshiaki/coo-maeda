@@ -10,7 +10,7 @@ export async function GET(
     const supabase = createRouteHandlerClient({ cookies })
 
     const { data: milestone, error } = await supabase
-      .from("milestones")
+      .from("progress_milestones")
       .select("*")
       .eq("id", params.id)
       .single()
@@ -40,7 +40,7 @@ export async function PUT(
     // タスクの存在確認
     if (json.tasks && json.tasks.length > 0) {
       const { count, error: tasksError } = await supabase
-        .from("tasks")
+        .from("progress_tasks")
         .select("id", { count: "exact" })
         .in("id", json.tasks)
 
@@ -56,7 +56,7 @@ export async function PUT(
     }
 
     const { data: milestone, error } = await supabase
-      .from("milestones")
+      .from("progress_milestones")
       .update({
         title: json.title,
         due_date: json.dueDate,
@@ -90,7 +90,7 @@ export async function DELETE(
     const supabase = createRouteHandlerClient({ cookies })
 
     const { error } = await supabase
-      .from("milestones")
+      .from("progress_milestones")
       .delete()
       .eq("id", params.id)
 

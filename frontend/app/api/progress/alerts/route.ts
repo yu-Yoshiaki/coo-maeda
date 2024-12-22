@@ -8,7 +8,7 @@ export async function GET() {
     const supabase = createRouteHandlerClient({ cookies })
 
     const { data: alerts, error } = await supabase
-      .from("alerts")
+      .from("progress_alerts")
       .select("*")
       .order("created_at", { ascending: false })
 

@@ -10,7 +10,7 @@ export async function GET(
     const supabase = createRouteHandlerClient({ cookies })
 
     const { data: risk, error } = await supabase
-      .from("risks")
+      .from("progress_risks")
       .select("*")
       .eq("id", params.id)
       .single()
@@ -40,7 +40,7 @@ export async function PUT(
     // 関連タスクの存在確認
     if (json.relatedTasks && json.relatedTasks.length > 0) {
       const { count, error: tasksError } = await supabase
-        .from("tasks")
+        .from("progress_tasks")
         .select("id", { count: "exact" })
         .in("id", json.relatedTasks)
 
@@ -57,7 +57,7 @@ export async function PUT(
 
     // 現在のリスクを取得
     const { data: currentRisk, error: getCurrentError } = await supabase
-      .from("risks")
+      .from("progress_risks")
       .select("severity")
       .eq("id", params.id)
       .single()
@@ -66,7 +66,7 @@ export async function PUT(
       throw getCurrentError
 
     const { data: risk, error } = await supabase
-      .from("risks")
+      .from("progress_risks")
       .update({
         title: json.title,
         description: json.description,
@@ -89,7 +89,7 @@ export async function PUT(
       && (json.severity === "HIGH" || json.severity === "CRITICAL")
     ) {
       const { error: alertError } = await supabase
-        .from("alerts")
+        .from("progress_alerts")
         .insert([
           {
             type: "RISK",
@@ -122,7 +122,7 @@ export async function DELETE(
     const supabase = createRouteHandlerClient({ cookies })
 
     const { error } = await supabase
-      .from("risks")
+      .from("progress_risks")
       .delete()
       .eq("id", params.id)
 

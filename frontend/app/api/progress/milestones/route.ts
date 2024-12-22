@@ -8,7 +8,7 @@ export async function GET() {
     const supabase = createRouteHandlerClient({ cookies })
 
     const { data: milestones, error } = await supabase
-      .from("milestones")
+      .from("progress_milestones")
       .select("*")
       .order("due_date", { ascending: true })
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     // タスクの存在確認
     if (json.tasks && json.tasks.length > 0) {
       const { count, error: tasksError } = await supabase
-        .from("tasks")
+        .from("progress_tasks")
         .select("id", { count: "exact" })
         .in("id", json.tasks)
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     const { data: milestone, error } = await supabase
-      .from("milestones")
+      .from("progress_milestones")
       .insert([
         {
           title: json.title,

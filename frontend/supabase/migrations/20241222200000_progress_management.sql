@@ -3,7 +3,7 @@
 -- タスクテーブル
 CREATE TYPE task_status AS ENUM ('NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'COMPLETED');
 
-CREATE TABLE tasks (
+CREATE TABLE progress_tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
@@ -20,7 +20,7 @@ CREATE TABLE tasks (
 );
 
 -- マイルストーンテーブル
-CREATE TABLE milestones (
+CREATE TABLE progress_milestones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   due_date TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE milestones (
 -- リスクテーブル
 CREATE TYPE risk_severity AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
 
-CREATE TABLE risks (
+CREATE TABLE progress_risks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT NOT NULL,
@@ -51,11 +51,11 @@ CREATE TABLE risks (
 -- アラートテーブル
 CREATE TYPE alert_type AS ENUM ('DELAY', 'RISK', 'MILESTONE', 'DEPENDENCY');
 
-CREATE TABLE alerts (
+CREATE TABLE progress_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type alert_type NOT NULL,
   message TEXT NOT NULL,
-  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+  task_id UUID REFERENCES progress_tasks(id) ON DELETE CASCADE,
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -76,72 +76,72 @@ CREATE TABLE progress_reports (
 );
 
 -- インデックスの作成
-CREATE INDEX tasks_status_idx ON tasks(status);
-CREATE INDEX tasks_due_date_idx ON tasks(due_date);
-CREATE INDEX tasks_progress_idx ON tasks(progress);
-CREATE INDEX milestones_due_date_idx ON milestones(due_date);
-CREATE INDEX milestones_progress_idx ON milestones(progress);
-CREATE INDEX risks_severity_idx ON risks(severity);
-CREATE INDEX alerts_is_read_idx ON alerts(is_read);
-CREATE INDEX alerts_created_at_idx ON alerts(created_at);
+CREATE INDEX progress_tasks_status_idx ON progress_tasks(status);
+CREATE INDEX progress_tasks_due_date_idx ON progress_tasks(due_date);
+CREATE INDEX progress_tasks_progress_idx ON progress_tasks(progress);
+CREATE INDEX progress_milestones_due_date_idx ON progress_milestones(due_date);
+CREATE INDEX progress_milestones_progress_idx ON progress_milestones(progress);
+CREATE INDEX progress_risks_severity_idx ON progress_risks(severity);
+CREATE INDEX progress_alerts_is_read_idx ON progress_alerts(is_read);
+CREATE INDEX progress_alerts_created_at_idx ON progress_alerts(created_at);
 
 -- RLSポリシーの設定
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE milestones ENABLE ROW LEVEL SECURITY;
-ALTER TABLE risks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE progress_tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE progress_milestones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE progress_risks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE progress_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress_reports ENABLE ROW LEVEL SECURITY;
 
 -- タスクのポリシー
-CREATE POLICY "タスクの参照は全員可能" ON tasks
+CREATE POLICY "タスクの参照は全員可能" ON progress_tasks
   FOR SELECT USING (true);
 
-CREATE POLICY "タスクの作成は認証済みユーザーのみ可能" ON tasks
+CREATE POLICY "タスクの作成は認証済みユーザーのみ可能" ON progress_tasks
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "タスクの更新は作成者のみ可能" ON tasks
+CREATE POLICY "タスクの更新は作成者のみ可能" ON progress_tasks
   FOR UPDATE USING (auth.uid() = created_by);
 
-CREATE POLICY "タスクの削除は作成者のみ可能" ON tasks
+CREATE POLICY "タスクの削除は作成者のみ可能" ON progress_tasks
   FOR DELETE USING (auth.uid() = created_by);
 
 -- マイルストーンのポリシー
-CREATE POLICY "マイルストーンの参照は全員可能" ON milestones
+CREATE POLICY "マイルストーンの参照は全員可能" ON progress_milestones
   FOR SELECT USING (true);
 
-CREATE POLICY "マイルストーンの作成は認証済みユーザーのみ可能" ON milestones
+CREATE POLICY "マイルストーンの作成は認証済みユーザーのみ可能" ON progress_milestones
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "マイルストーンの更新は作成者のみ可能" ON milestones
+CREATE POLICY "マイルストーンの更新は作成者のみ可能" ON progress_milestones
   FOR UPDATE USING (auth.uid() = created_by);
 
-CREATE POLICY "マイルストーンの削除は作成者のみ可能" ON milestones
+CREATE POLICY "マイルストーンの削除は作成者のみ可能" ON progress_milestones
   FOR DELETE USING (auth.uid() = created_by);
 
 -- リスクのポリシー
-CREATE POLICY "リスクの参照は全員可能" ON risks
+CREATE POLICY "リスクの参照は全員可能" ON progress_risks
   FOR SELECT USING (true);
 
-CREATE POLICY "リスクの作成は認証済みユーザーのみ可能" ON risks
+CREATE POLICY "リスクの作成は認証済みユーザーのみ可能" ON progress_risks
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "リスクの更新は作成者のみ可能" ON risks
+CREATE POLICY "リスクの更新は作成者のみ可能" ON progress_risks
   FOR UPDATE USING (auth.uid() = created_by);
 
-CREATE POLICY "リスクの削除は作成者のみ可能" ON risks
+CREATE POLICY "リスクの削除は作成者のみ可能" ON progress_risks
   FOR DELETE USING (auth.uid() = created_by);
 
 -- アラートのポリシー
-CREATE POLICY "アラートの参照は全員可能" ON alerts
+CREATE POLICY "アラートの参照は全員可能" ON progress_alerts
   FOR SELECT USING (true);
 
-CREATE POLICY "アラートの作成は認証済みユーザーのみ可能" ON alerts
+CREATE POLICY "アラートの作成は認証済みユーザーのみ可能" ON progress_alerts
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "アラートの更新は作成者のみ可能" ON alerts
+CREATE POLICY "アラートの更新は作成者のみ可能" ON progress_alerts
   FOR UPDATE USING (auth.uid() = created_by);
 
-CREATE POLICY "アラートの削除は作成者のみ可能" ON alerts
+CREATE POLICY "アラートの削除は作成者のみ可能" ON progress_alerts
   FOR DELETE USING (auth.uid() = created_by);
 
 -- 進捗レポートのポリシー
@@ -167,22 +167,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 更新日時の自動更新トリガーを設定
-CREATE TRIGGER update_tasks_updated_at
-  BEFORE UPDATE ON tasks
+CREATE TRIGGER update_progress_tasks_updated_at
+  BEFORE UPDATE ON progress_tasks
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER update_milestones_updated_at
-  BEFORE UPDATE ON milestones
+CREATE TRIGGER update_progress_milestones_updated_at
+  BEFORE UPDATE ON progress_milestones
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER update_risks_updated_at
-  BEFORE UPDATE ON risks
+CREATE TRIGGER update_progress_risks_updated_at
+  BEFORE UPDATE ON progress_risks
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER update_alerts_updated_at
-  BEFORE UPDATE ON alerts
+CREATE TRIGGER update_progress_alerts_updated_at
+  BEFORE UPDATE ON progress_alerts
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at(); 

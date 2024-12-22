@@ -10,7 +10,7 @@ export async function PUT(
     const supabase = createRouteHandlerClient({ cookies })
 
     const { error } = await supabase
-      .from("alerts")
+      .from("progress_alerts")
       .update({
         is_read: true,
         updated_at: new Date().toISOString(),

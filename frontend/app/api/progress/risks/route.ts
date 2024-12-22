@@ -8,7 +8,7 @@ export async function GET() {
     const supabase = createRouteHandlerClient({ cookies })
 
     const { data: risks, error } = await supabase
-      .from("risks")
+      .from("progress_risks")
       .select("*")
       .order("severity", { ascending: false })
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     // 関連タスクの存在確認
     if (json.relatedTasks && json.relatedTasks.length > 0) {
       const { count, error: tasksError } = await supabase
-        .from("tasks")
+        .from("progress_tasks")
         .select("id", { count: "exact" })
         .in("id", json.relatedTasks)
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     const { data: risk, error } = await supabase
-      .from("risks")
+      .from("progress_risks")
       .insert([
         {
           title: json.title,
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     // 重要度が高い場合はアラートを作成
     if (json.severity === "HIGH" || json.severity === "CRITICAL") {
       const { error: alertError } = await supabase
-        .from("alerts")
+        .from("progress_alerts")
         .insert([
           {
             type: "RISK",
