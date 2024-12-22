@@ -1,53 +1,88 @@
-import { scheduleQueries } from "@/lib/db"
-import { scheduleSchema } from "@/lib/validations/schedule"
+import { Schedule, scheduleSchema } from "@/features/schedule/types"
+import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function GET(request: Request) {
+/**
+ * スケジュール一覧を取得
+ */
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
+    // 認証チェック
+    const session = await auth()
+    if (!session) {
+      return NextResponse.json(
+        { error: { message: "認証が必要です", code: "UNAUTHORIZED" } },
+        { status: 401 },
+      )
+    }
 
-    const schedules = await scheduleQueries.findMany({
+    // スケジュール一覧を取得
+    const schedules = await db.schedule.findMany({
       where: {
-        startDate: startDate ? { gte: new Date(startDate) } : undefined,
-        endDate: endDate ? { lte: new Date(endDate) } : undefined,
+        OR: [
+          { createdBy: session.user.id },
+          { participants: { some: { id: session.user.id } } },
+        ],
       },
+      orderBy: { startDate: "asc" },
     })
 
-    // バリデーション
-    const validatedSchedules = schedules.map(schedule =>
-      scheduleSchema.parse(schedule),
-    )
-
-    return NextResponse.json(validatedSchedules)
+    return NextResponse.json({ data: schedules })
   }
   catch (error) {
-    console.error("Error fetching schedules:", error)
+    console.error("スケジュール一覧取得エラー:", error)
     return NextResponse.json(
-      { error: "スケジュールの取得に失敗しました" },
+      { error: { message: "スケジュール一覧の取得に失敗しました", code: "INTERNAL_SERVER_ERROR" } },
       { status: 500 },
     )
   }
 }
 
+/**
+ * 新規スケジュールを作成
+ */
 export async function POST(request: Request) {
   try {
+    // 認証チェック
+    const session = await auth()
+    if (!session) {
+      return NextResponse.json(
+        { error: { message: "認証が必要です", code: "UNAUTHORIZED" } },
+        { status: 401 },
+      )
+    }
+
+    // リクエストボディを取得
     const body = await request.json()
 
     // バリデーション
-    const validatedSchedule = scheduleSchema.parse(body)
-
-    const schedule = await scheduleQueries.create({
-      data: validatedSchedule,
+    const validatedData = scheduleSchema.parse({
+      ...body,
+      createdBy: session.user.id,
     })
 
-    return NextResponse.json(schedule)
+    // スケジュールを作成
+    const schedule = await db.schedule.create({
+      data: {
+        ...validatedData,
+        startDate: new Date(validatedData.startDate),
+        endDate: new Date(validatedData.endDate),
+      },
+    })
+
+    return NextResponse.json({ data: schedule }, { status: 201 })
   }
   catch (error) {
-    console.error("Error creating schedule:", error)
+    console.error("スケジュール作成エラー:", error)
+    if (error.name === "ZodError") {
+      return NextResponse.json(
+        { error: { message: "入力データが不正です", code: "VALIDATION_ERROR", details: error.errors } },
+        { status: 400 },
+      )
+    }
     return NextResponse.json(
-      { error: "スケジュールの作成に失敗しました" },
+      { error: { message: "スケジュールの作成に失敗しました", code: "INTERNAL_SERVER_ERROR" } },
       { status: 500 },
     )
   }
