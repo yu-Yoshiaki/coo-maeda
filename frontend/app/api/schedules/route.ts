@@ -1,92 +1,54 @@
-import type { ScheduleCreateInput, ScheduleFilter } from "@/features/schedule/types"
-import { db } from "@/lib/db"
+import { scheduleQueries } from "@/lib/db"
 import { scheduleSchema } from "@/lib/validations/schedule"
 import { NextResponse } from "next/server"
 
-// スケジュール一覧の取得
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const filter: ScheduleFilter = {
-      startDate: searchParams.get("startDate") ? new Date(searchParams.get("startDate")!) : undefined,
-      endDate: searchParams.get("endDate") ? new Date(searchParams.get("endDate")!) : undefined,
-      status: searchParams.get("status")?.split(",") as any,
-      participantId: searchParams.get("participantId") ?? undefined,
-      searchQuery: searchParams.get("q") ?? undefined,
-    }
+    const startDate = searchParams.get("startDate")
+    const endDate = searchParams.get("endDate")
 
-    const schedules = await db.schedule.findMany({
+    const schedules = await scheduleQueries.findMany({
       where: {
-        AND: [
-          filter.startDate ? { startDate: { gte: filter.startDate } } : {},
-          filter.endDate ? { endDate: { lte: filter.endDate } } : {},
-          filter.status ? { status: { in: filter.status } } : {},
-          filter.participantId
-            ? { participants: { some: { id: filter.participantId } } }
-            : {},
-          filter.searchQuery
-            ? {
-                OR: [
-                  { title: { contains: filter.searchQuery } },
-                  { description: { contains: filter.searchQuery } },
-                ],
-              }
-            : {},
-        ],
-      },
-      include: {
-        participants: true,
-        reminders: true,
+        startDate: startDate ? { gte: new Date(startDate) } : undefined,
+        endDate: endDate ? { lte: new Date(endDate) } : undefined,
       },
     })
 
-    return NextResponse.json(schedules)
+    // バリデーション
+    const validatedSchedules = schedules.map(schedule =>
+      scheduleSchema.parse(schedule),
+    )
+
+    return NextResponse.json(validatedSchedules)
   }
   catch (error) {
-    console.error("[SCHEDULES_GET]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    console.error("Error fetching schedules:", error)
+    return NextResponse.json(
+      { error: "スケジュールの取得に失敗しました" },
+      { status: 500 },
+    )
   }
 }
 
-// スケジュールの作成
 export async function POST(request: Request) {
   try {
-    const json = await request.json()
-    const body = scheduleSchema.parse(json)
+    const body = await request.json()
 
-    const schedule = await db.schedule.create({
-      data: {
-        title: body.title,
-        description: body.description,
-        startDate: body.startDate,
-        endDate: body.endDate,
-        isAllDay: body.isAllDay,
-        location: body.location,
-        status: body.status,
-        createdBy: body.createdBy,
-        participants: {
-          create: body.participants,
-        },
-        reminders: {
-          create: body.reminders,
-        },
-        recurrence: body.recurrence
-          ? {
-              create: body.recurrence,
-            }
-          : undefined,
-      },
-      include: {
-        participants: true,
-        reminders: true,
-        recurrence: true,
-      },
+    // バリデーション
+    const validatedSchedule = scheduleSchema.parse(body)
+
+    const schedule = await scheduleQueries.create({
+      data: validatedSchedule,
     })
 
     return NextResponse.json(schedule)
   }
   catch (error) {
-    console.error("[SCHEDULES_POST]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    console.error("Error creating schedule:", error)
+    return NextResponse.json(
+      { error: "スケジュールの作成に失敗しました" },
+      { status: 500 },
+    )
   }
 }

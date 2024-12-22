@@ -1,54 +1,34 @@
-import type { NaturalLanguageScheduleInput } from "@/features/schedule/types"
 import { scheduleAnalyzer } from "@/features/schedule/llm/scheduleAnalyzer"
-import { db } from "@/lib/db"
-import { openai } from "@/lib/openai"
+import { scheduleSchema } from "@/lib/validations/schedule"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    const json = await request.json()
-    const { text, userId, contextDate } = json as NaturalLanguageScheduleInput
+    const body = await request.json()
+    const { text } = body
 
-    // OpenAI APIを使用してスケジュール情報を抽出
-    const scheduleInfo = await scheduleAnalyzer.analyze({
+    if (!text) {
+      return NextResponse.json(
+        { error: "テキストが必要です" },
+        { status: 400 },
+      )
+    }
+
+    const schedule = await scheduleAnalyzer.analyze({
       text,
-      contextDate,
+      contextDate: new Date(),
     })
 
-    // 抽出した情報を使用してスケジュールを作成
-    const schedule = await db.schedule.create({
-      data: {
-        title: scheduleInfo.title,
-        description: scheduleInfo.description,
-        startDate: scheduleInfo.startDate,
-        endDate: scheduleInfo.endDate,
-        isAllDay: scheduleInfo.isAllDay,
-        location: scheduleInfo.location,
-        status: "scheduled",
-        createdBy: userId,
-        participants: {
-          create: scheduleInfo.participants,
-        },
-        reminders: {
-          create: scheduleInfo.reminders,
-        },
-        recurrence: scheduleInfo.recurrence
-          ? {
-              create: scheduleInfo.recurrence,
-            }
-          : undefined,
-      },
-      include: {
-        participants: true,
-        reminders: true,
-        recurrence: true,
-      },
-    })
+    // バリデーション
+    const validatedSchedule = scheduleSchema.parse(schedule)
 
-    return NextResponse.json(schedule)
+    return NextResponse.json(validatedSchedule)
   }
   catch (error) {
-    console.error("[SCHEDULE_NATURAL_LANGUAGE]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    console.error("Error in natural language processing:", error)
+    return NextResponse.json(
+      { error: "スケジュールの解析に失敗しました" },
+      { status: 500 },
+    )
   }
 }
