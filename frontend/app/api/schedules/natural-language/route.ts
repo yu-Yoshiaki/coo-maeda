@@ -1,4 +1,4 @@
-import { scheduleAnalyzer } from "@/features/schedule/llm/scheduleAnalyzer"
+import { analyzeSchedule } from "@/features/schedule/llm/scheduleAnalyzer"
 import { scheduleSchema } from "@/lib/validations/schedule"
 import { NextResponse } from "next/server"
 
@@ -14,10 +14,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const schedule = await scheduleAnalyzer.analyze({
-      text,
-      contextDate: new Date(),
-    })
+    const schedule = await analyzeSchedule(text)
 
     // バリデーション
     const validatedSchedule = scheduleSchema.parse(schedule)

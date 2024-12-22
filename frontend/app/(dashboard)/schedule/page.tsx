@@ -1,9 +1,5 @@
 import { ScheduleManager } from "@/components/schedule/ScheduleManager"
-
-export const metadata = {
-  title: "スケジュール管理",
-  description: "スケジュールの管理と自然言語での予定作成",
-}
+import { metadata } from "./metadata"
 
 export default function SchedulePage() {
   return (

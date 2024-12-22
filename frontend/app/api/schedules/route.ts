@@ -18,15 +18,15 @@ export async function GET() {
     }
 
     // スケジュール一覧を取得
-    const schedules = await db.schedule.findMany({
-      where: {
-        OR: [
-          { createdBy: session.user.id },
-          { participants: { some: { id: session.user.id } } },
-        ],
-      },
-      orderBy: { startDate: "asc" },
-    })
+    const { data: schedules, error } = await db
+      .from("schedules")
+      .select("*")
+      .or(`created_by.eq.${session.user.id},participants.cs.{${session.user.id}}`)
+      .order("start_date", { ascending: true })
+
+    if (error) {
+      throw error
+    }
 
     return NextResponse.json({ data: schedules })
   }
@@ -59,25 +59,31 @@ export async function POST(request: Request) {
     // バリデーション
     const validatedData = scheduleSchema.parse({
       ...body,
-      createdBy: session.user.id,
+      created_by: session.user.id,
     })
 
     // スケジュールを作成
-    const schedule = await db.schedule.create({
-      data: {
+    const { data: schedule, error } = await db
+      .from("schedules")
+      .insert({
         ...validatedData,
-        startDate: new Date(validatedData.startDate),
-        endDate: new Date(validatedData.endDate),
-      },
-    })
+        start_date: new Date(validatedData.startDate).toISOString(),
+        end_date: new Date(validatedData.endDate).toISOString(),
+      })
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
 
     return NextResponse.json({ data: schedule }, { status: 201 })
   }
   catch (error) {
     console.error("スケジュール作成エラー:", error)
-    if (error.name === "ZodError") {
+    if ((error as any).name === "ZodError") {
       return NextResponse.json(
-        { error: { message: "入力データが不正です", code: "VALIDATION_ERROR", details: error.errors } },
+        { error: { message: "入力データが不正です", code: "VALIDATION_ERROR", details: (error as any).errors } },
         { status: 400 },
       )
     }

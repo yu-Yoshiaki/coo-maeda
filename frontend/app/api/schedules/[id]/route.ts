@@ -1,4 +1,4 @@
-import { scheduleSchema, updateScheduleSchema } from "@/features/schedule/types"
+import { updateScheduleSchema } from "@/features/schedule/types"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
@@ -11,7 +11,6 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
-    // 認証チェック
     const session = await auth()
     if (!session) {
       return NextResponse.json(
@@ -20,20 +19,20 @@ export async function GET(
       )
     }
 
-    // スケジュールを取得
-    const schedule = await db.schedule.findUnique({
-      where: { id: params.id },
-    })
+    const { data: schedule, error } = await db
+      .from("schedules")
+      .select("*")
+      .eq("id", params.id)
+      .single()
 
-    if (!schedule) {
+    if (error || !schedule) {
       return NextResponse.json(
         { error: { message: "スケジュールが見つかりません", code: "NOT_FOUND" } },
         { status: 404 },
       )
     }
 
-    // アクセス権限チェック
-    if (schedule.createdBy !== session.user.id && !schedule.participants?.includes(session.user.id)) {
+    if (schedule.created_by !== session.user.id && !schedule.participants?.includes(session.user.id)) {
       return NextResponse.json(
         { error: { message: "アクセス権限がありません", code: "FORBIDDEN" } },
         { status: 403 },
@@ -59,7 +58,6 @@ export async function PUT(
   { params }: { params: { id: string } },
 ) {
   try {
-    // 認証チェック
     const session = await auth()
     if (!session) {
       return NextResponse.json(
@@ -68,50 +66,52 @@ export async function PUT(
       )
     }
 
-    // 既存のスケジュールを取得
-    const existingSchedule = await db.schedule.findUnique({
-      where: { id: params.id },
-    })
+    const { data: existingSchedule, error: fetchError } = await db
+      .from("schedules")
+      .select("*")
+      .eq("id", params.id)
+      .single()
 
-    if (!existingSchedule) {
+    if (fetchError || !existingSchedule) {
       return NextResponse.json(
         { error: { message: "スケジュールが見つかりません", code: "NOT_FOUND" } },
         { status: 404 },
       )
     }
 
-    // アクセス権限チェック
-    if (existingSchedule.createdBy !== session.user.id) {
+    if (existingSchedule.created_by !== session.user.id) {
       return NextResponse.json(
         { error: { message: "アクセス権限がありません", code: "FORBIDDEN" } },
         { status: 403 },
       )
     }
 
-    // リクエストボディを取得
     const body = await request.json()
-
-    // バリデーション
     const validatedData = updateScheduleSchema.parse(body)
 
-    // スケジュールを更新
-    const schedule = await db.schedule.update({
-      where: { id: params.id },
-      data: {
+    const { data: schedule, error: updateError } = await db
+      .from("schedules")
+      .update({
         ...validatedData,
-        startDate: validatedData.startDate ? new Date(validatedData.startDate) : undefined,
-        endDate: validatedData.endDate ? new Date(validatedData.endDate) : undefined,
-        updatedAt: new Date(),
-      },
-    })
+        start_date: validatedData.startDate ? new Date(validatedData.startDate).toISOString() : null,
+        end_date: validatedData.endDate ? new Date(validatedData.endDate).toISOString() : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", params.id)
+      .select()
+      .single()
+
+    if (updateError) {
+      throw updateError
+    }
 
     return NextResponse.json({ data: schedule })
   }
   catch (error) {
     console.error("スケジュール更新エラー:", error)
-    if (error.name === "ZodError") {
+    if ((error as any).name === "ZodError") {
       return NextResponse.json(
-        { error: { message: "入力データが不正です", code: "VALIDATION_ERROR", details: error.errors } },
+        { error: { message: "入力データが不正です", code: "VALIDATION_ERROR", details: (error as any).errors } },
         { status: 400 },
       )
     }
@@ -130,7 +130,6 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   try {
-    // 認証チェック
     const session = await auth()
     if (!session) {
       return NextResponse.json(
@@ -139,30 +138,34 @@ export async function DELETE(
       )
     }
 
-    // 既存のスケジュールを取得
-    const existingSchedule = await db.schedule.findUnique({
-      where: { id: params.id },
-    })
+    const { data: existingSchedule, error: fetchError } = await db
+      .from("schedules")
+      .select("*")
+      .eq("id", params.id)
+      .single()
 
-    if (!existingSchedule) {
+    if (fetchError || !existingSchedule) {
       return NextResponse.json(
         { error: { message: "スケジュールが見つかりません", code: "NOT_FOUND" } },
         { status: 404 },
       )
     }
 
-    // アクセス権限チェック
-    if (existingSchedule.createdBy !== session.user.id) {
+    if (existingSchedule.created_by !== session.user.id) {
       return NextResponse.json(
         { error: { message: "アクセス権限がありません", code: "FORBIDDEN" } },
         { status: 403 },
       )
     }
 
-    // スケジュールを削除
-    await db.schedule.delete({
-      where: { id: params.id },
-    })
+    const { error: deleteError } = await db
+      .from("schedules")
+      .delete()
+      .eq("id", params.id)
+
+    if (deleteError) {
+      throw deleteError
+    }
 
     return NextResponse.json(null, { status: 204 })
   }

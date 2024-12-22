@@ -27,10 +27,7 @@ export type CreateScheduleInput = Omit<Schedule, "id" | "createdAt" | "updatedAt
  */
 export type UpdateScheduleInput = Partial<Omit<Schedule, "id" | "createdAt" | "updatedAt">>
 
-/**
- * スケジュールのバリデーションスキーマ
- */
-export const scheduleSchema = z.object({
+const baseScheduleSchema = z.object({
   title: z.string().min(1, "題名は必須です").max(100, "題名は100文字以内で入力してください"),
   description: z.string().max(1000, "説明は1000文字以内で入力してください").optional(),
   startDate: z.date(),
@@ -39,22 +36,26 @@ export const scheduleSchema = z.object({
   location: z.string().max(200, "場所は200文字以内で入力してください").optional(),
   participants: z.array(z.string()).optional(),
   createdBy: z.string(),
-}).refine((data) => {
+})
+
+export const scheduleSchema = baseScheduleSchema.refine((data) => {
   return data.startDate <= data.endDate
 }, {
   message: "開始日時は終了日時より前である必要があります",
   path: ["startDate"],
 })
 
-/**
- * スケジュール作成時のバリデーションスキーマ
- */
 export const createScheduleSchema = scheduleSchema
 
-/**
- * スケジュール更新時のバリデーションスキーマ
- */
-export const updateScheduleSchema = scheduleSchema.partial()
+export const updateScheduleSchema = baseScheduleSchema.partial().refine((data) => {
+  if (data.startDate && data.endDate) {
+    return data.startDate <= data.endDate
+  }
+  return true
+}, {
+  message: "開始日時は終了日時より前である必要があります",
+  path: ["startDate"],
+})
 
 /**
  * APIレスポンスの型定義
