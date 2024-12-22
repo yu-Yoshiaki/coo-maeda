@@ -10,11 +10,17 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.47.10",
+    "@types/react-big-calendar": "^1.16.0",
+    "date-fns": "^4.1.0",
     "framer-motion": "^11.15.0",
     "lucide-react": "^0.469.0",
     "next": "canary",
+    "openai": "^4.77.0",
     "react": "canary",
-    "react-dom": "canary"
+    "react-big-calendar": "^1.17.1",
+    "react-dom": "canary",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.5.4",
