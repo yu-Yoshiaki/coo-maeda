@@ -1,11 +1,22 @@
 import type { Milestone, ProgressReport, Risk, Task } from "@/features/progress/types"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function POST() {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      },
+    )
 
     // タスク、マイルストーン、リスクを取得
     const [
@@ -75,7 +86,7 @@ export async function POST() {
 
     if (slowMilestones && slowMilestones.length > 0) {
       recommendations.push(
-        `${slowMilestones.length}件のマイルストーンが予定より遅れています。スケジュールの見直しが必要です。`,
+        `${slowMilestones.length}件のマイルストーンが予定より遅れています。ス��ジュールの見直しが必要です。`,
       )
     }
 
