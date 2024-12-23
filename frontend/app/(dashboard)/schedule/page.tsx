@@ -1,5 +1,4 @@
 import { ScheduleManager } from "@/components/schedule/ScheduleManager"
-import { metadata } from "./metadata"
 
 export default function SchedulePage() {
   return (

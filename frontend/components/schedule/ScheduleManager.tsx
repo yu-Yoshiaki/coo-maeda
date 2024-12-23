@@ -4,6 +4,7 @@ import type { Schedule } from "@/lib/validations/schedule"
 import { useSchedule } from "@/hooks/schedule/useSchedule"
 import { useScheduleAnalyzer } from "@/hooks/schedule/useScheduleAnalyzer"
 import { useState } from "react"
+import { toast } from "sonner"
 import { ScheduleCalendar } from "./ScheduleCalendar"
 
 export function ScheduleManager() {
@@ -30,7 +31,7 @@ export function ScheduleManager() {
     }
     catch (error) {
       console.error(error)
-      alert("予定の解析に失敗しました")
+      toast.error("予定の解析に失敗しました")
     }
   }
 
@@ -49,7 +50,7 @@ export function ScheduleManager() {
     }
     catch (error) {
       console.error(error)
-      alert("予定の削除に失敗しました")
+      toast.error("予定の削除に失敗しました")
     }
   }
 

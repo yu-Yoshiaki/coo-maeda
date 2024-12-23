@@ -66,6 +66,7 @@ export function AuthForm() {
       </form>
       <div className="mt-4 text-center">
         <button
+          type="button"
           onClick={() => setIsLogin(!isLogin)}
           className="text-sm text-indigo-600 hover:text-indigo-500"
         >

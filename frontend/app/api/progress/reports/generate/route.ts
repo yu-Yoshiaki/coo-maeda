@@ -1,4 +1,5 @@
-import type { Milestone, ProgressReport, Risk, Task } from "@/features/progress/types"
+/* eslint-disable node/prefer-global/process */
+import type { ProgressReport } from "@/features/progress/types"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
@@ -13,6 +14,12 @@ export async function POST() {
         cookies: {
           get(name: string) {
             return cookieStore.get(name)?.value
+          },
+          set(_name: string, _value: string) {
+            // This is a server component, so we don't need to set cookies
+          },
+          remove(_name: string) {
+            // This is a server component, so we don't need to remove cookies
           },
         },
       },
@@ -52,7 +59,7 @@ export async function POST() {
 
     if (delayedTasks && delayedTasks.length > 0) {
       recommendations.push(
-        `${delayedTasks.length}件のタスクが期限を過ぎています。優先的に対応が必要です。`,
+        `${delayedTasks.length}件のタスクが期限��過ぎています。優先的に対応が必要です。`,
       )
     }
 
@@ -86,7 +93,7 @@ export async function POST() {
 
     if (slowMilestones && slowMilestones.length > 0) {
       recommendations.push(
-        `${slowMilestones.length}件のマイルストーンが予定より遅れています。ス��ジュールの見直しが必要です。`,
+        `${slowMilestones.length}件のマイルストーンが予定より遅れています。スジュールの見直しが必要です。`,
       )
     }
 
@@ -99,6 +106,7 @@ export async function POST() {
       tasks: tasks || [],
       risks: risks || [],
       recommendations,
+      createdBy: "SYSTEM",
     }
 
     // レポートをデータベースに保存

@@ -1,3 +1,4 @@
+/* eslint-disable node/prefer-global/process */
 import type { Milestone } from "@/features/progress/types"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"

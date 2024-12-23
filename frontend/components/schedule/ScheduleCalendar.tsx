@@ -17,6 +17,8 @@ const localizer = dateFnsLocalizer({
   locales,
 })
 
+const EMPTY_SCHEDULES: Schedule[] = []
+
 interface ScheduleCalendarProps {
   schedules?: Schedule[]
   onSelectEvent?: (event: Schedule) => void
@@ -24,7 +26,7 @@ interface ScheduleCalendarProps {
 }
 
 export function ScheduleCalendar({
-  schedules = [],
+  schedules = EMPTY_SCHEDULES,
   onSelectEvent,
   onSelectSlot,
 }: ScheduleCalendarProps) {

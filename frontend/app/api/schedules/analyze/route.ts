@@ -1,3 +1,4 @@
+/* eslint-disable node/prefer-global/process */
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
