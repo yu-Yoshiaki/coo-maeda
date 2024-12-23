@@ -20,11 +20,6 @@ export function useProgress() {
     loading: true,
   })
 
-  // データの初期読み込み
-  useEffect(() => {
-    loadAllData()
-  }, [])
-
   // 全データの読み込み
   const loadAllData = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true }))
@@ -60,6 +55,11 @@ export function useProgress() {
         error: error instanceof Error ? error.message : "予期せぬエラーが発生しました",
       }))
     }
+  }, [])
+
+  // データの初期読み込み
+  useEffect(() => {
+    loadAllData()
   }, [])
 
   // タスクの作成

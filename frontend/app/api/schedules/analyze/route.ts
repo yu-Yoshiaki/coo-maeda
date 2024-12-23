@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       .select("*")
       .gte("start_date", startDate)
       .lte("end_date", endDate)
+      .eq("created_by", session.user.id)
       .order("start_date", { ascending: true })
 
     if (schedulesError)
