@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useState } from "react"
 
 interface CalendarProvider {
   id: string
@@ -11,22 +11,22 @@ interface CalendarProvider {
 
 const providers: CalendarProvider[] = [
   {
-    id: 'google',
-    name: 'Google Calendar',
-    icon: '📅',
+    id: "google",
+    name: "Google Calendar",
+    icon: "📅",
     connected: false,
   },
   {
-    id: 'outlook',
-    name: 'Outlook Calendar',
-    icon: '📆',
+    id: "outlook",
+    name: "Outlook Calendar",
+    icon: "📆",
     connected: false,
   },
 ]
 
 export function CalendarSync() {
   const [syncStatus, setSyncStatus] = useState<Record<string, boolean>>(
-    Object.fromEntries(providers.map(p => [p.id, p.connected]))
+    Object.fromEntries(providers.map(p => [p.id, p.connected])),
   )
 
   const handleSync = async (providerId: string) => {
@@ -42,28 +42,31 @@ export function CalendarSync() {
       {providers.map(provider => (
         <div
           key={provider.id}
-          className="flex items-center justify-between p-3 border rounded-md"
+          className="flex items-center justify-between rounded-md border p-3"
         >
           <div className="flex items-center space-x-3">
             <span className="text-2xl">{provider.icon}</span>
             <span className="font-medium">{provider.name}</span>
           </div>
           <button
+            type="button"
             onClick={() => handleSync(provider.id)}
-            className={`px-4 py-2 rounded-md transition-colors ${
+            className={`rounded-md px-4 py-2 transition-colors ${
               syncStatus[provider.id]
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                ? "bg-green-100 text-green-700 hover:bg-green-200"
+                : "bg-blue-100 text-blue-700 hover:bg-blue-200"
             }`}
           >
-            {syncStatus[provider.id] ? '同期中' : '同期する'}
+            {syncStatus[provider.id] ? "同期中" : "同期する"}
           </button>
         </div>
       ))}
 
       <div className="text-sm text-gray-500">
-        最終同期: {new Date().toLocaleString('ja-JP')}
+        最終同期:
+        {" "}
+        {new Date().toLocaleString("ja-JP")}
       </div>
     </div>
   )
-} 
+}

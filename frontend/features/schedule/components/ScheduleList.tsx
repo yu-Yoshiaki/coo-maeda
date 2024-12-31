@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Schedule } from '../types/Schedule'
-import { format } from 'date-fns'
-import { ja } from 'date-fns/locale'
+import type { Schedule } from "../types/Schedule"
+import { format } from "date-fns"
+import { ja } from "date-fns/locale"
+import { useState } from "react"
 
 interface ScheduleListProps {
   schedules?: Schedule[]
@@ -14,15 +14,15 @@ export function ScheduleList({ schedules = [], loading = false }: ScheduleListPr
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
 
   if (loading) {
-    return <div className="text-center py-4">読み込み中...</div>
+    return <div className="py-4 text-center">読み込み中...</div>
   }
 
   if (schedules.length === 0) {
-    return <div className="text-center py-4 text-gray-500">予定はありません</div>
+    return <div className="py-4 text-center text-gray-500">予定はありません</div>
   }
 
   const groupedSchedules = schedules.reduce((groups, schedule) => {
-    const date = format(new Date(schedule.start), 'yyyy-MM-dd')
+    const date = format(new Date(schedule.start), "yyyy-MM-dd")
     if (!groups[date]) {
       groups[date] = []
     }
@@ -35,16 +35,17 @@ export function ScheduleList({ schedules = [], loading = false }: ScheduleListPr
       {Object.entries(groupedSchedules).map(([date, daySchedules]) => (
         <div key={date} className="space-y-2">
           <h3 className="font-medium">
-            {format(new Date(date), 'M月d日（E）', { locale: ja })}
+            {format(new Date(date), "M月d日（E）", { locale: ja })}
           </h3>
           <div className="space-y-1">
             {daySchedules.map(schedule => (
               <button
                 key={schedule.id}
+                type="button"
                 onClick={() => setSelectedSchedule(schedule)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-md"
+                className="w-full rounded-md px-4 py-2 text-left hover:bg-gray-100"
               >
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">{schedule.title}</div>
                     {schedule.location && (
@@ -52,11 +53,11 @@ export function ScheduleList({ schedules = [], loading = false }: ScheduleListPr
                     )}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {format(new Date(schedule.start), 'HH:mm')}
+                    {format(new Date(schedule.start), "HH:mm")}
                     {!schedule.isAllDay && (
                       <>
-                        {' - '}
-                        {format(new Date(schedule.end), 'HH:mm')}
+                        {" - "}
+                        {format(new Date(schedule.end), "HH:mm")}
                       </>
                     )}
                   </div>
@@ -69,17 +70,17 @@ export function ScheduleList({ schedules = [], loading = false }: ScheduleListPr
 
       {/* スケジュール詳細モーダル */}
       {selectedSchedule && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6">
             <div className="space-y-4">
               <div>
                 <h2 className="text-xl font-bold">{selectedSchedule.title}</h2>
                 <p className="text-gray-500">
-                  {format(new Date(selectedSchedule.start), 'M月d日（E） HH:mm', { locale: ja })}
+                  {format(new Date(selectedSchedule.start), "M月d日（E） HH:mm", { locale: ja })}
                   {!selectedSchedule.isAllDay && (
                     <>
-                      {' - '}
-                      {format(new Date(selectedSchedule.end), 'HH:mm')}
+                      {" - "}
+                      {format(new Date(selectedSchedule.end), "HH:mm")}
                     </>
                   )}
                 </p>
@@ -99,7 +100,7 @@ export function ScheduleList({ schedules = [], loading = false }: ScheduleListPr
               {selectedSchedule.attendees && selectedSchedule.attendees.length > 0 && (
                 <div>
                   <h3 className="font-medium">参加者</h3>
-                  <ul className="list-disc list-inside text-gray-700">
+                  <ul className="list-inside list-disc text-gray-700">
                     {selectedSchedule.attendees.map((attendee, index) => (
                       <li key={index}>{attendee}</li>
                     ))}
@@ -110,7 +111,7 @@ export function ScheduleList({ schedules = [], loading = false }: ScheduleListPr
               <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => setSelectedSchedule(null)}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
+                  className="rounded-md bg-gray-100 px-4 py-2 hover:bg-gray-200"
                 >
                   閉じる
                 </button>
@@ -121,4 +122,4 @@ export function ScheduleList({ schedules = [], loading = false }: ScheduleListPr
       )}
     </div>
   )
-} 
+}

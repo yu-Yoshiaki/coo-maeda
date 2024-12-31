@@ -101,35 +101,6 @@ sequenceDiagram
     end
 ```
 
-### 2.4 事業計画管理
-
-```mermaid
-sequenceDiagram
-    actor User as ユーザー
-    participant Chat as チャットUI
-    participant AI as AI処理
-    participant Plan as 事業計画処理
-    participant DB as データベース
-
-    User->>Chat: 事業計画の説明
-    Chat->>AI: 意図解析・構造化
-    AI->>Plan: 計画生成
-    Plan->>DB: 計画保存
-    DB-->>Chat: 構造化プラン表示
-
-    opt リソース分析
-        AI->>Plan: リソース要件分析
-        Plan->>DB: リソース登録
-        DB-->>Chat: リソース表示
-    end
-
-    opt リスク分析
-        AI->>Plan: リスク分析
-        Plan->>DB: リスク登録
-        DB-->>Chat: リスク・対策表示
-    end
-```
-
 ## 3. 状態遷移
 
 ### 3.1 チャットコンテキスト
@@ -249,3 +220,32 @@ stateDiagram-v2
 - スワイプ右: メニュー表示
 - スワイプ左: メニュー非表示
 - ダブルタップ: 詳細表示
+
+### 2.4 事業計画管理
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザー
+    participant Chat as チャットUI
+    participant AI as AI処理
+    participant Plan as 事業計画処理
+    participant DB as データベース
+
+    User->>Chat: 事業計画の説明
+    Chat->>AI: 意図解析・構造化
+    AI->>Plan: 計画生成
+    Plan->>DB: 計画保存
+    DB-->>Chat: 構造化プラン表示
+
+    opt リソース分析
+        AI->>Plan: リソース要件分析
+        Plan->>DB: リソース登録
+        DB-->>Chat: リソース表示
+    end
+
+    opt リスク分析
+        AI->>Plan: リスク分析
+        Plan->>DB: リスク登録
+        DB-->>Chat: リスク・対策表示
+    end
+```

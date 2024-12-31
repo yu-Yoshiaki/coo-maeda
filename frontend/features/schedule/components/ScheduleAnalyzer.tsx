@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo } from 'react'
-import { Schedule } from '../types/Schedule'
+import type { Schedule } from "../types/Schedule"
+import { useMemo } from "react"
 
 interface ScheduleAnalyzerProps {
   schedules?: Schedule[]
@@ -25,7 +25,7 @@ export function ScheduleAnalyzer({ schedules = [] }: ScheduleAnalyzerProps) {
 
     const dayMeetings: Record<string, number> = {}
 
-    schedules.forEach(schedule => {
+    schedules.forEach((schedule) => {
       // ミーティング数をカウント
       result.totalMeetings++
 
@@ -36,7 +36,7 @@ export function ScheduleAnalyzer({ schedules = [] }: ScheduleAnalyzerProps) {
       result.totalDuration += duration
 
       // 日付ごとのミーティング数をカウント
-      const dateKey = start.toISOString().split('T')[0]
+      const dateKey = start.toISOString().split("T")[0]
       dayMeetings[dateKey] = (dayMeetings[dateKey] || 0) + 1
 
       // カテゴリ分析（タイトルから推測）
@@ -63,27 +63,28 @@ export function ScheduleAnalyzer({ schedules = [] }: ScheduleAnalyzerProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-3 bg-blue-50 rounded-md">
+        <div className="rounded-md bg-blue-50 p-3">
           <div className="text-sm text-blue-600">ミーティング数</div>
           <div className="text-2xl font-bold text-blue-700">
             {analysis.totalMeetings}
           </div>
         </div>
-        <div className="p-3 bg-green-50 rounded-md">
+        <div className="rounded-md bg-green-50 p-3">
           <div className="text-sm text-green-600">合計時間</div>
           <div className="text-2xl font-bold text-green-700">
-            {Math.round(analysis.totalDuration / 60)}時間
+            {Math.round(analysis.totalDuration / 60)}
+            時間
           </div>
         </div>
       </div>
 
       {analysis.busyDays.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium mb-2">忙しい日</h4>
+          <h4 className="mb-2 text-sm font-medium">忙しい日</h4>
           <div className="text-sm text-gray-600">
             {analysis.busyDays.map(date => (
               <div key={date} className="mb-1">
-                {new Date(date).toLocaleDateString('ja-JP')}
+                {new Date(date).toLocaleDateString("ja-JP")}
               </div>
             ))}
           </div>
@@ -91,10 +92,10 @@ export function ScheduleAnalyzer({ schedules = [] }: ScheduleAnalyzerProps) {
       )}
 
       <div>
-        <h4 className="text-sm font-medium mb-2">カテゴリ分布</h4>
+        <h4 className="mb-2 text-sm font-medium">カテゴリ分布</h4>
         <div className="space-y-2">
           {Object.entries(analysis.categories).map(([category, count]) => (
-            <div key={category} className="flex justify-between items-center">
+            <div key={category} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{category}</span>
               <span className="text-sm font-medium">{count}</span>
             </div>
@@ -107,17 +108,17 @@ export function ScheduleAnalyzer({ schedules = [] }: ScheduleAnalyzerProps) {
 
 function guessCategory(title: string): string {
   const lowerTitle = title.toLowerCase()
-  if (lowerTitle.includes('mtg') || lowerTitle.includes('meeting')) {
-    return 'ミーティング'
+  if (lowerTitle.includes("mtg") || lowerTitle.includes("meeting")) {
+    return "ミーティング"
   }
-  if (lowerTitle.includes('review') || lowerTitle.includes('レビュー')) {
-    return 'レビュー'
+  if (lowerTitle.includes("review") || lowerTitle.includes("レビュー")) {
+    return "レビュー"
   }
-  if (lowerTitle.includes('interview') || lowerTitle.includes('面接')) {
-    return '面接'
+  if (lowerTitle.includes("interview") || lowerTitle.includes("面接")) {
+    return "面接"
   }
-  if (lowerTitle.includes('lunch') || lowerTitle.includes('ランチ')) {
-    return 'ランチ'
+  if (lowerTitle.includes("lunch") || lowerTitle.includes("ランチ")) {
+    return "ランチ"
   }
-  return 'その他'
+  return "その他"
 }

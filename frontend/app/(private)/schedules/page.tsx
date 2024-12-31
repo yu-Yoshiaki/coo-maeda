@@ -1,40 +1,12 @@
 "use client"
 
 import type { Schedule } from "@/features/schedule/types/Schedule"
+import { scheduleApi } from "@/features/schedule/api/scheduleApi"
 import { CalendarSync } from "@/features/schedule/components/CalendarSync"
 import { ScheduleAnalyzer } from "@/features/schedule/components/ScheduleAnalyzer"
 import { ScheduleCalendar } from "@/features/schedule/components/ScheduleCalendar"
 import { ScheduleList } from "@/features/schedule/components/ScheduleList"
 import { useEffect, useState } from "react"
-
-// モックデータ（後で実際のAPIに置き換え）
-const mockSchedules: Schedule[] = [
-  {
-    id: "1",
-    title: "クライアントMTG",
-    description: "A社との定例ミーティング",
-    start: new Date("2024-01-10T10:00:00"),
-    end: new Date("2024-01-10T11:00:00"),
-    location: "オンライン",
-    status: "confirmed",
-    source: "internal",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: "2",
-    title: "経営戦略ミーティング",
-    description: "四半期の戦略レビュー",
-    start: new Date("2024-01-10T14:00:00"),
-    end: new Date("2024-01-10T16:00:00"),
-    location: "会議室A",
-    status: "confirmed",
-    source: "internal",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  // 他のモックデータ...
-]
 
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
@@ -44,13 +16,14 @@ export default function SchedulesPage() {
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        // TODO: 実際のAPIからデータを取得
-        setSchedules(mockSchedules)
+        const data = await scheduleApi.list()
+        setSchedules(data)
         setLoading(false)
       }
-      catch {
+      catch (err) {
         setError("スケジュールの取得に失敗しました")
         setLoading(false)
+        console.error("Failed to fetch schedules:", err)
       }
     }
 
@@ -59,7 +32,7 @@ export default function SchedulesPage() {
 
   const handleScheduleSelect = (schedule: Schedule) => {
     // TODO: スケジュール選択時の処理を実装
-    console.log("Selected schedule:", schedule)
+    console.info("Selected schedule:", schedule)
   }
 
   if (loading) {
