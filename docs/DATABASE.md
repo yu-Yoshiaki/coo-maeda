@@ -8,11 +8,15 @@ erDiagram
     Users ||--o{ Tasks : owns
     Users ||--o{ Schedules : manages
     Users ||--o{ KPIs : tracks
+    Users ||--o{ BusinessPlans : owns
     ChatSessions ||--o{ ChatMessages : contains
     ChatMessages ||--o{ Attachments : has
     ChatMessages ||--o{ Actions : triggers
     Tasks ||--o{ TaskHistories : logs
     KPIs ||--o{ KPIHistories : records
+    BusinessPlans ||--o{ BusinessPlanPhases : contains
+    BusinessPlans ||--o{ BusinessPlanResources : requires
+    BusinessPlans ||--o{ BusinessPlanRisks : identifies
 
     Users {
         uuid id PK
@@ -122,6 +126,69 @@ erDiagram
         bigint file_size
         jsonb metadata
         timestamp created_at
+    }
+
+    BusinessPlans {
+        uuid id PK
+        uuid user_id FK
+        uuid message_id FK
+        string title
+        text description
+        string status
+        jsonb objectives
+        jsonb target_market
+        jsonb revenue_model
+        timestamp start_date
+        timestamp target_completion_date
+        numeric progress
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    BusinessPlanPhases {
+        uuid id PK
+        uuid plan_id FK
+        string name
+        text description
+        int order
+        timestamp start_date
+        timestamp end_date
+        string status
+        numeric progress
+        jsonb success_criteria
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    BusinessPlanResources {
+        uuid id PK
+        uuid plan_id FK
+        string type
+        string name
+        text description
+        numeric quantity
+        string unit
+        numeric allocated
+        numeric used
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    BusinessPlanRisks {
+        uuid id PK
+        uuid plan_id FK
+        string title
+        text description
+        string severity
+        string probability
+        string status
+        jsonb mitigation_plan
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
     }
 ```
 
@@ -257,6 +324,77 @@ erDiagram
 | metadata   | jsonb     | YES  | メタデータ       |
 | created_at | timestamp | NO   | 作成日時         |
 
+### BusinessPlans（事業計画）
+
+| カラム名               | 型        | NULL | 説明                 |
+| --------------------- | --------- | ---- | -------------------- |
+| id                    | uuid      | NO   | プライマリーキー      |
+| user_id               | uuid      | NO   | ユーザーID           |
+| message_id            | uuid      | YES  | 作成元メッセージID    |
+| title                 | string    | NO   | 計画タイトル         |
+| description           | text      | NO   | 計画概要             |
+| status                | string    | NO   | ステータス           |
+| objectives            | jsonb     | NO   | 目標設定             |
+| target_market         | jsonb     | NO   | 目標市場             |
+| revenue_model         | jsonb     | NO   | 収益モデル           |
+| start_date            | timestamp | NO   | 開始日               |
+| target_completion_date| timestamp | NO   | 目標完了日           |
+| progress              | numeric   | NO   | 進捗率               |
+| metadata              | jsonb     | YES  | メタデータ           |
+| created_at            | timestamp | NO   | 作成日時             |
+| updated_at            | timestamp | NO   | 更新日時             |
+
+### BusinessPlanPhases（事業計画フェーズ）
+
+| カラム名        | 型        | NULL | 説明                 |
+| -------------- | --------- | ---- | -------------------- |
+| id             | uuid      | NO   | プライマリーキー      |
+| plan_id        | uuid      | NO   | 事業計画ID           |
+| name           | string    | NO   | フェーズ名           |
+| description    | text      | YES  | 説明                 |
+| order          | int       | NO   | 順序                 |
+| start_date     | timestamp | NO   | 開始日               |
+| end_date       | timestamp | NO   | 終了日               |
+| status         | string    | NO   | ステータス           |
+| progress       | numeric   | NO   | 進捗率               |
+| success_criteria| jsonb    | NO   | 成功基準             |
+| metadata       | jsonb     | YES  | メタデータ           |
+| created_at     | timestamp | NO   | 作成日時             |
+| updated_at     | timestamp | NO   | 更新日時             |
+
+### BusinessPlanResources（事業計画リソース）
+
+| カラム名    | 型        | NULL | 説明                 |
+| ---------- | --------- | ---- | -------------------- |
+| id         | uuid      | NO   | プライマリーキー      |
+| plan_id    | uuid      | NO   | 事業計画ID           |
+| type       | string    | NO   | リソース種別         |
+| name       | string    | NO   | リソース名           |
+| description| text      | YES  | 説明                 |
+| quantity   | numeric   | NO   | 必要数量             |
+| unit       | string    | NO   | 単位                 |
+| allocated  | numeric   | NO   | 割当量               |
+| used       | numeric   | NO   | 使用量               |
+| metadata   | jsonb     | YES  | メタデータ           |
+| created_at | timestamp | NO   | 作成日時             |
+| updated_at | timestamp | NO   | 更新日時             |
+
+### BusinessPlanRisks（事業計画リスク）
+
+| カラム名        | 型        | NULL | 説明                 |
+| -------------- | --------- | ---- | -------------------- |
+| id             | uuid      | NO   | プライマリーキー      |
+| plan_id        | uuid      | NO   | 事業計画ID           |
+| title          | string    | NO   | リスクタイトル       |
+| description    | text      | NO   | リスク詳細           |
+| severity       | string    | NO   | 深刻度               |
+| probability    | string    | NO   | 発生確率             |
+| status         | string    | NO   | ステータス           |
+| mitigation_plan| jsonb     | NO   | 対策計画             |
+| metadata       | jsonb     | YES  | メタデータ           |
+| created_at     | timestamp | NO   | 作成日時             |
+| updated_at     | timestamp | NO   | 更新日時             |
+
 ## インデックス
 
 ### ChatSessions
@@ -300,6 +438,32 @@ erDiagram
 - message_id
 - file_type
 
+### BusinessPlans
+
+- user_id
+- status
+- start_date
+- target_completion_date
+
+### BusinessPlanPhases
+
+- plan_id
+- status
+- start_date
+- end_date
+
+### BusinessPlanResources
+
+- plan_id
+- type
+- status
+
+### BusinessPlanRisks
+
+- plan_id
+- severity
+- status
+
 ## 制約
 
 ### 外部キー制約
@@ -314,6 +478,11 @@ erDiagram
 8. KPIs.user_id → Users.id
 9. KPIHistories.kpi_id → KPIs.id
 10. Attachments.message_id → ChatMessages.id
+11. BusinessPlans.user_id → Users.id
+12. BusinessPlans.message_id → ChatMessages.id
+13. BusinessPlanPhases.plan_id → BusinessPlans.id
+14. BusinessPlanResources.plan_id → BusinessPlans.id
+15. BusinessPlanRisks.plan_id → BusinessPlans.id
 
 ### その他の制約
 
@@ -322,6 +491,10 @@ erDiagram
 3. KPIs.category は定義された値のいずれか
 4. Schedules.end_time > Schedules.start_time
 5. Actions.status は ['pending', 'in_progress', 'completed', 'failed'] のいずれか
+6. BusinessPlans.status は ['計画中', '実行中', '完了', '中断', '中止'] のいずれか
+7. BusinessPlanPhases.status は ['未着手', '進行中', '完了', '中断'] のいずれか
+8. BusinessPlanRisks.severity は ['低', '中', '高', '致命的'] のいずれか
+9. BusinessPlanRisks.probability は ['低', '中', '高'] のいずれか
 
 ```
 

@@ -39,7 +39,13 @@ src/
 │   ├── auth/              # 認証
 │   ├── chat/              # チャット
 │   ├── task/              # タスク
-│   └── schedule/          # スケジュール
+│   ├── schedule/          # スケジュール
+│   └── business-plan/     # 事業計画
+│       ├── components/    # 事業計画UI
+│       ├── hooks/         # カスタムフック
+│       ├── stores/        # 状態管理
+│       ├── types/         # 型定義
+│       └── utils/         # ユーティリティ
 ├── hooks/                 # カスタムフック
 ├── lib/                   # ユーティリティ
 ├── stores/                # 状態管理
@@ -69,14 +75,14 @@ graph TB
 ```typescript
 // stores/chat.ts
 interface ChatStore {
-  messages: Message[];
-  context: ChatContext;
-  session: ChatSession;
+  messages: Message[]
+  context: ChatContext
+  session: ChatSession
   actions: {
-    sendMessage: (content: string) => Promise<void>;
-    updateContext: (context: Partial<ChatContext>) => void;
-    clearSession: () => void;
-  };
+    sendMessage: (content: string) => Promise<void>
+    updateContext: (context: Partial<ChatContext>) => void
+    clearSession: () => void
+  }
 }
 ```
 
@@ -121,19 +127,19 @@ create policy "Users can see their own data"
 
 ```typescript
 // functions/chat/index.ts
-export const onRequest = async (context: Context) => {
-  const { req, res } = context;
-  const { messages, sessionId } = await req.json();
+export async function onRequest(context: Context) {
+  const { req, res } = context
+  const { messages, sessionId } = await req.json()
 
   // OpenAI API呼び出し
   const completion = await openai.chat.completions.create({
     model: "gpt-4",
-    messages: messages,
+    messages,
     temperature: 0.7,
-  });
+  })
 
-  return res.json(completion.choices[0].message);
-};
+  return res.json(completion.choices[0].message)
+}
 ```
 
 ## 4. AI 処理設計
@@ -147,12 +153,19 @@ sequenceDiagram
     participant Context
     participant OpenAI
     participant Action
+    participant BusinessPlan
 
     User->>Chat: メッセージ送信
     Chat->>Context: コンテキスト取得
     Context->>OpenAI: プロンプト生成
     OpenAI-->>Chat: 応答生成
     Chat->>Action: アクション抽出
+
+    alt 事業計画関連
+        Action->>BusinessPlan: 事業計画処理
+        BusinessPlan-->>Action: 処理結果
+    end
+
     Action-->>Chat: 実行結果
     Chat-->>User: 応答表示
 ```
@@ -161,17 +174,30 @@ sequenceDiagram
 
 ```typescript
 interface ChatContext {
-  sessionId: string;
-  topic: string;
-  entities: Entity[];
-  lastAction: Action;
-  metadata: Record<string, any>;
+  sessionId: string
+  topic: string
+  entities: Entity[]
+  lastAction: Action
+  metadata: Record<string, any>
+  businessPlanContext?: BusinessPlanContext
 }
 
 interface Entity {
-  type: "task" | "schedule" | "kpi";
-  id: string;
-  reference: string;
+  type: "task" | "schedule" | "kpi" | "business_plan"
+  id: string
+  reference: string
+}
+
+interface BusinessPlanContext {
+  planId: string
+  currentPhase: string
+  objectives: string[]
+  targetMarket: string
+  revenueModel: string
+  timeline: {
+    start: Date
+    end: Date
+  }
 }
 ```
 
@@ -277,18 +303,29 @@ environments:
 - 負荷分散
 - コネクションプーリング
 - キャッシュ分散
+- ベクトルデータベースの最適化
 
 ### 9.2 プラグイン設計
 
 ```typescript
 interface Plugin {
-  name: string;
-  version: string;
+  name: string
+  version: string
   handlers: {
-    onMessage?: (message: Message) => Promise<void>;
-    onAction?: (action: Action) => Promise<void>;
-  };
-  setup: () => Promise<void>;
+    onMessage?: (message: Message) => Promise<void>
+    onAction?: (action: Action) => Promise<void>
+    onBusinessPlanUpdate?: (plan: BusinessPlan) => Promise<void>
+  }
+  setup: () => Promise<void>
+}
+
+interface BusinessPlanPlugin extends Plugin {
+  handlers: {
+    onPlanCreate?: (plan: BusinessPlan) => Promise<void>
+    onPhaseComplete?: (phase: BusinessPlanPhase) => Promise<void>
+    onRiskIdentified?: (risk: BusinessPlanRisk) => Promise<void>
+    onResourceUpdate?: (resource: BusinessPlanResource) => Promise<void>
+  }
 }
 ```
 

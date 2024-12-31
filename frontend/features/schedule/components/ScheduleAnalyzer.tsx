@@ -1,217 +1,123 @@
 "use client"
 
-import { useState } from "react"
-import { useScheduleAnalyzer } from "../hooks/useScheduleAnalyzer"
+import { useMemo } from 'react'
+import { Schedule } from '../types/Schedule'
 
-export function ScheduleAnalyzer() {
-  const { loading, error, result, analyzeSchedule } = useScheduleAnalyzer()
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
-  const [includePatternAnalysis, setIncludePatternAnalysis] = useState(true)
-  const [includeTimeDistribution, setIncludeTimeDistribution] = useState(true)
+interface ScheduleAnalyzerProps {
+  schedules?: Schedule[]
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await analyzeSchedule({
-      startDate,
-      endDate,
-      includePatternAnalysis,
-      includeTimeDistribution,
+interface AnalysisResult {
+  totalMeetings: number
+  totalDuration: number
+  busyDays: string[]
+  categories: Record<string, number>
+}
+
+export function ScheduleAnalyzer({ schedules = [] }: ScheduleAnalyzerProps) {
+  const analysis = useMemo<AnalysisResult>(() => {
+    const result: AnalysisResult = {
+      totalMeetings: 0,
+      totalDuration: 0,
+      busyDays: [],
+      categories: {},
+    }
+
+    const dayMeetings: Record<string, number> = {}
+
+    schedules.forEach(schedule => {
+      // ミーティング数をカウント
+      result.totalMeetings++
+
+      // 所要時間を計算（分単位）
+      const start = new Date(schedule.start)
+      const end = new Date(schedule.end)
+      const duration = (end.getTime() - start.getTime()) / (1000 * 60)
+      result.totalDuration += duration
+
+      // 日付ごとのミーティング数をカウント
+      const dateKey = start.toISOString().split('T')[0]
+      dayMeetings[dateKey] = (dayMeetings[dateKey] || 0) + 1
+
+      // カテゴリ分析（タイトルから推測）
+      const category = guessCategory(schedule.title)
+      result.categories[category] = (result.categories[category] || 0) + 1
     })
+
+    // 忙しい日を特定（1日3ミーティング以上）
+    result.busyDays = Object.entries(dayMeetings)
+      .filter(([_, count]) => count >= 3)
+      .map(([date]) => date)
+
+    return result
+  }, [schedules])
+
+  if (!schedules.length) {
+    return (
+      <div className="text-center text-gray-500">
+        分析するスケジュールがありません
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">スケジュール分析</h2>
-
-      {/* 分析フォーム */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-              開始日
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-              終了日
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-3 bg-blue-50 rounded-md">
+          <div className="text-sm text-blue-600">ミーティング数</div>
+          <div className="text-2xl font-bold text-blue-700">
+            {analysis.totalMeetings}
           </div>
         </div>
+        <div className="p-3 bg-green-50 rounded-md">
+          <div className="text-sm text-green-600">合計時間</div>
+          <div className="text-2xl font-bold text-green-700">
+            {Math.round(analysis.totalDuration / 60)}時間
+          </div>
+        </div>
+      </div>
 
+      {analysis.busyDays.length > 0 && (
+        <div>
+          <h4 className="text-sm font-medium mb-2">忙しい日</h4>
+          <div className="text-sm text-gray-600">
+            {analysis.busyDays.map(date => (
+              <div key={date} className="mb-1">
+                {new Date(date).toLocaleDateString('ja-JP')}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h4 className="text-sm font-medium mb-2">カテゴリ分布</h4>
         <div className="space-y-2">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="patternAnalysis"
-              checked={includePatternAnalysis}
-              onChange={e => setIncludePatternAnalysis(e.target.checked)}
-              className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label htmlFor="patternAnalysis" className="ml-2 block text-sm text-gray-700">
-              パターン分析を含める
-            </label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="timeDistribution"
-              checked={includeTimeDistribution}
-              onChange={e => setIncludeTimeDistribution(e.target.checked)}
-              className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label htmlFor="timeDistribution" className="ml-2 block text-sm text-gray-700">
-              時間帯分布を含める
-            </label>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300"
-        >
-          {loading ? "分析中..." : "分析開始"}
-        </button>
-      </form>
-
-      {/* エラー表示 */}
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 text-red-700">
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* 分析結果の表示 */}
-      {result && (
-        <div className="space-y-6 rounded-lg border p-6">
-          {/* サマリー */}
-          <div>
-            <h3 className="text-lg font-semibold">概要</h3>
-            <dl className="mt-2 grid grid-cols-2 gap-4">
-              <div>
-                <dt className="text-sm text-gray-500">総予定数</dt>
-                <dd className="text-lg font-medium">
-                  {result.summary.totalEvents}
-                  件
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-500">1日あたりの平均</dt>
-                <dd className="text-lg font-medium">
-                  {result.summary.averageEventsPerDay.toFixed(1)}
-                  件
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* 時間帯分布 */}
-          {result.timeDistribution && (
-            <div>
-              <h3 className="text-lg font-semibold">時間帯分布</h3>
-              <dl className="mt-2 grid grid-cols-3 gap-4">
-                <div>
-                  <dt className="text-sm text-gray-500">午前</dt>
-                  <dd className="text-lg font-medium">
-                    {result.timeDistribution.morningEvents}
-                    件
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-gray-500">午後</dt>
-                  <dd className="text-lg font-medium">
-                    {result.timeDistribution.afternoonEvents}
-                    件
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-gray-500">夜間</dt>
-                  <dd className="text-lg font-medium">
-                    {result.timeDistribution.eveningEvents}
-                    件
-                  </dd>
-                </div>
-              </dl>
+          {Object.entries(analysis.categories).map(([category, count]) => (
+            <div key={category} className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">{category}</span>
+              <span className="text-sm font-medium">{count}</span>
             </div>
-          )}
-
-          {/* パターン */}
-          {result.patterns && (
-            <div>
-              <h3 className="text-lg font-semibold">パターン分析</h3>
-              <div className="mt-2 space-y-4">
-                {result.patterns.regularEvents.map((event, index) => (
-                  <div key={index} className="rounded-md bg-gray-50 p-4">
-                    <h4 className="font-medium">{event.title}</h4>
-                    <p className="text-sm text-gray-600">
-                      頻度:
-                      {event.frequency}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      提案:
-                      {event.suggestedOptimization}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 推奨事項 */}
-          <div>
-            <h3 className="text-lg font-semibold">推奨事項</h3>
-            <div className="mt-2 space-y-4">
-              <div>
-                <h4 className="font-medium">スケジューリング</h4>
-                <ul className="mt-1 list-inside list-disc space-y-1">
-                  {result.recommendations.scheduling.map((rec, index) => (
-                    <li key={index} className="text-sm text-gray-600">
-                      {rec}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium">最適化</h4>
-                <ul className="mt-1 list-inside list-disc space-y-1">
-                  {result.recommendations.optimization.map((rec, index) => (
-                    <li key={index} className="text-sm text-gray-600">
-                      {rec}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium">ワークライフバランス</h4>
-                <ul className="mt-1 list-inside list-disc space-y-1">
-                  {result.recommendations.workLifeBalance.map((rec, index) => (
-                    <li key={index} className="text-sm text-gray-600">
-                      {rec}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   )
+}
+
+function guessCategory(title: string): string {
+  const lowerTitle = title.toLowerCase()
+  if (lowerTitle.includes('mtg') || lowerTitle.includes('meeting')) {
+    return 'ミーティング'
+  }
+  if (lowerTitle.includes('review') || lowerTitle.includes('レビュー')) {
+    return 'レビュー'
+  }
+  if (lowerTitle.includes('interview') || lowerTitle.includes('面接')) {
+    return '面接'
+  }
+  if (lowerTitle.includes('lunch') || lowerTitle.includes('ランチ')) {
+    return 'ランチ'
+  }
+  return 'その他'
 }
