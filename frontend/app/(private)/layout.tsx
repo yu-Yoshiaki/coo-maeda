@@ -40,7 +40,7 @@ export default async function PrivateLayout({
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">事業計画一覧</h2>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/business-plans/new">新規作成</Link>
+              <Link href="/business-plans">新規作成</Link>
             </Button>
           </div>
           <nav className="space-y-1">

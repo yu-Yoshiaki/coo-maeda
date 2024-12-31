@@ -22,7 +22,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const { description } = await request.json()
+    const { context } = await request.json()
+
+    // 会話の文脈を1つの文字列にまとめる
+    const contextSummary = context.join("\n")
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4-1106-preview",
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
         {
           role: "system",
           content: `あなたは事業計画の分析と構造化を行うエキスパートAIです。
-ユーザーから受け取った事業計画の説明を分析し、以下の形式のJSONを生成してください。
+ユーザーとの会話の文脈から事業計画を分析し、以下の形式のJSONを生成してください。
 
 日付は必ず"YYYY-MM-DD"形式で指定してください。
 説明から具体的な日付が読み取れない場合は、以下のルールで設定してください：
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
         },
         {
           role: "user",
-          content: description,
+          content: contextSummary,
         },
       ],
     })

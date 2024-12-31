@@ -1,16 +1,70 @@
 "use client"
 
 import type { BusinessPlanInput } from "../types/BusinessPlan"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { mutate } from "swr"
 import { businessPlanApi } from "../api/businessPlanApi"
 
-export function BusinessPlanAIAnalyzer() {
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [description, setDescription] = useState("")
+interface Message {
+  role: "user" | "assistant"
+  content: string
+}
 
-  const handleAnalyze = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+export function BusinessPlanAIAnalyzer() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [context, setContext] = useState<string[]>([])
+
+  const handleContinueChat = async () => {
+    if (!input.trim())
+      return
+    setIsAnalyzing(true)
+
+    try {
+      // ユーザーメッセージを追加
+      const userMessage: Message = { role: "user" as const, content: input }
+      const newMessages = [...messages, userMessage]
+      setMessages(newMessages)
+      setInput("")
+
+      // AIからの応答を取得
+      const response = await fetch("/api/business-plans/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: newMessages,
+          context,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("チャットに失敗しました")
+      }
+
+      const data = await response.json()
+      const assistantMessage: Message = {
+        role: "assistant" as const,
+        content: data.message,
+      }
+      setMessages([...newMessages, assistantMessage])
+      setContext([...context, data.context])
+    }
+    catch (error) {
+      console.error("Failed to chat:", error)
+    }
+    finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const handleCreatePlan = async () => {
     setIsAnalyzing(true)
 
     try {
@@ -19,7 +73,7 @@ export function BusinessPlanAIAnalyzer() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ description }),
+        body: JSON.stringify({ context }),
       })
 
       if (!response.ok) {
@@ -29,7 +83,11 @@ export function BusinessPlanAIAnalyzer() {
       const analyzedPlan: BusinessPlanInput = await response.json()
       await businessPlanApi.create(analyzedPlan)
       mutate("business-plans")
-      setDescription("")
+
+      // チャット履歴をクリア
+      setMessages([])
+      setContext([])
+      setInput("")
     }
     catch (error) {
       console.error("Failed to analyze business plan:", error)
@@ -40,33 +98,57 @@ export function BusinessPlanAIAnalyzer() {
   }
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow">
-      <h2 className="mb-4 text-xl font-semibold">事業計画の説明</h2>
-      <form onSubmit={handleAnalyze} className="space-y-4">
+    <Card className="bg-white p-6 shadow">
+      <h2 className="mb-4 text-xl font-semibold">事業計画の作成</h2>
+
+      <ScrollArea className="mb-4 h-[400px] pr-4">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`mb-4 ${
+              message.role === "user" ? "text-right" : "text-left"
+            }`}
+          >
+            <div
+              className={`inline-block max-w-[80%] rounded-lg p-3 ${
+                message.role === "user"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-900"
+              }`}
+            >
+              {message.content}
+            </div>
+          </div>
+        ))}
+      </ScrollArea>
+
+      <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            自然言語で事業計画を説明してください
-          </label>
-          <textarea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            required
-            rows={6}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="例: 2024年第2四半期までにAI機能を活用した営業支援システムを開発し、売上を30%向上させる計画です。主なターゲットは中小企業で、開発チーム5名で実施します。"
+          <Textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            rows={4}
+            className="w-full"
+            placeholder="事業計画について教えてください。例: AIを活用した営業支援システムを開発したいと考えています。"
           />
         </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isAnalyzing}
-            className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+        <div className="flex justify-end gap-3">
+          <Button
+            onClick={handleContinueChat}
+            disabled={isAnalyzing || !input.trim()}
+            variant="secondary"
           >
-            {isAnalyzing ? "分析中..." : "AIで分析"}
-          </button>
+            {isAnalyzing ? "応答中..." : "計画を立てる"}
+          </Button>
+          <Button
+            onClick={handleCreatePlan}
+            disabled={isAnalyzing || messages.length === 0}
+          >
+            事業計画書を作成する
+          </Button>
         </div>
-      </form>
-    </div>
+      </div>
+    </Card>
   )
 }

@@ -11,16 +11,6 @@ import { Suspense } from "react"
 // }
 
 export default async function BusinessPlansPage() {
-  const supabase = await createClient()
-  const { data: plans } = await supabase
-    .from("business_plans")
-    .select(`
-      *,
-      action_items (*),
-      milestones (*)
-    `)
-    .order("created_at", { ascending: false })
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -33,21 +23,6 @@ export default async function BusinessPlansPage() {
 
       <div className="space-y-8">
         <BusinessPlanAIAnalyzer />
-
-        <Suspense fallback={<Loading />}>
-          {plans && plans.length > 0 && (
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="mb-4 text-xl font-semibold">最新の事業計画進捗</h2>
-              <BusinessPlanGantt
-                startDate={plans[0].start_date}
-                endDate={plans[0].end_date}
-                actionItems={plans[0].action_items}
-                milestones={plans[0].milestones}
-              />
-            </div>
-          )}
-          <BusinessPlanList />
-        </Suspense>
       </div>
     </div>
   )
