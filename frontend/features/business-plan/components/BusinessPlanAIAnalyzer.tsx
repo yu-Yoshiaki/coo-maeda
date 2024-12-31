@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { mutate } from "swr"
 import { businessPlanApi } from "../api/businessPlanApi"
 
@@ -105,18 +107,46 @@ export function BusinessPlanAIAnalyzer() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`mb-4 ${
-              message.role === "user" ? "text-right" : "text-left"
+            className={`mb-4 flex ${
+              message.role === "user" ? "justify-end" : "justify-start"
             }`}
           >
             <div
-              className={`inline-block max-w-[80%] rounded-lg p-3 ${
+              className={`w-fit max-w-[80%] rounded-lg p-3 ${
                 message.role === "user"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-900"
               }`}
             >
-              {message.content}
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {message.role === "user" ? (
+                  <div className="whitespace-pre-wrap break-words text-sm">
+                    {message.content}
+                  </div>
+                ) : (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    className="whitespace-pre-wrap break-words text-sm"
+                    components={{
+                      // リンクを新しいタブで開く
+                      a: ({ node, ...props }) => (
+                        <a target="_blank" rel="noopener noreferrer" {...props} />
+                      ),
+                      // コードブロックのスタイリング
+                      code: ({ node, inline, ...props }) =>
+                        inline
+                          ? (
+                              <code className="rounded bg-gray-200 px-1 py-0.5 text-sm dark:bg-gray-800" {...props} />
+                            )
+                          : (
+                              <code className="block overflow-x-auto rounded bg-gray-200 p-2 text-sm dark:bg-gray-800" {...props} />
+                            ),
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                )}
+              </div>
             </div>
           </div>
         ))}
