@@ -1,61 +1,128 @@
+"use client"
+
 import type { BusinessPlan } from "@/features/business-plan/types/BusinessPlan"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loading } from "@/components/ui/Loading"
-import { BusinessPlanGantt } from "@/features/business-plan/components/BusinessPlanGantt"
-import { createClient } from "@/lib/supabase/server"
+import { BusinessPlanGanttSection } from "@/features/business-plan/components/BusinessPlanGanttSection"
+import { BusinessPlanInlineEdit } from "@/features/business-plan/components/BusinessPlanInlineEdit"
+import { createClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
+import { Check, CheckCircle2, Circle, Clock } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { useEffect, useState } from "react"
 
-// 日付フォーマット用のヘルパー関数
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString)
-    return "未設定"
-  try {
-    return new Date(dateString).toLocaleDateString()
-  }
-  catch (error) {
-    console.error("Date formatting error:", error)
-    return "無効な日付"
-  }
-}
+const STATUS_OPTIONS = [
+  { value: "todo", label: "未着手", icon: Circle, color: "text-gray-500", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
+  { value: "in_progress", label: "進行中", icon: Clock, color: "text-blue-500", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
+  { value: "completed", label: "完了", icon: CheckCircle2, color: "text-green-500", bgColor: "bg-green-50", borderColor: "border-green-200" },
+]
 
-export default async function BusinessPlanDetailPage({
+export default function BusinessPlanDetailPage({
   params,
 }: {
   params: { planId: string }
 }) {
-  const supabase = await createClient()
-  const { data: plan, error } = await supabase
-    .from("business_plans")
-    .select(`
-      *,
-      action_items (*),
-      milestones (*)
-    `)
-    .eq("id", params.planId)
-    .single()
+  const [businessPlan, setBusinessPlan] = useState<BusinessPlan | null>(null)
+  const [changes, setChanges] = useState<Record<string, any>>({})
+  const [loading, setLoading] = useState(false)
 
-  if (error || !plan) {
-    notFound()
+  // 初期データの取得
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient()
+      const { data: plan, error } = await supabase
+        .from("business_plans")
+        .select(`
+          *,
+          action_items!inner (
+            id,
+            status
+          )
+        `)
+        .eq("id", params.planId)
+        .single()
+
+      if (error || !plan) {
+        notFound()
+      }
+
+      setBusinessPlan(plan as BusinessPlan)
+    }
+
+    fetchData()
+  }, [params.planId])
+
+  if (!businessPlan) {
+    return <Loading />
   }
-
-  const businessPlan = plan as BusinessPlan
 
   // アクションアイテムのステータスごとの数を計算
   const actionItemCounts = {
-    todo: businessPlan.actionItems?.filter(item => item.status === "todo").length ?? 0,
-    in_progress: businessPlan.actionItems?.filter(item => item.status === "in_progress").length ?? 0,
-    completed: businessPlan.actionItems?.filter(item => item.status === "completed").length ?? 0,
+    todo: businessPlan.action_items?.filter(item => item.status === "todo").length ?? 0,
+    in_progress: businessPlan.action_items?.filter(item => item.status === "in_progress").length ?? 0,
+    completed: businessPlan.action_items?.filter(item => item.status === "completed").length ?? 0,
+  }
+
+  // フィールドの変更を記録
+  const handleFieldChange = (field: string, value: string) => {
+    setChanges(prev => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  // 変更を保存
+  const handleSave = async () => {
+    if (Object.keys(changes).length === 0)
+      return
+
+    try {
+      setLoading(true)
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("business_plans")
+        .update(changes)
+        .eq("id", businessPlan.id)
+
+      if (error)
+        throw error
+
+      // 成功したら変更をクリアして状態を更新
+      setChanges({})
+      setBusinessPlan(prev => ({
+        ...prev!,
+        ...changes,
+      }))
+    }
+    catch (error) {
+      console.error("Error updating business plan:", error)
+    }
+    finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{businessPlan.title}</h1>
-        <div className="space-x-4">
-          <Button variant="outline" asChild>
-            <Link href="/business-plans">戻る</Link>
+      <div className="mb-8 space-y-4">
+        <h1 className="text-3xl font-bold">
+          <BusinessPlanInlineEdit
+            id={businessPlan.id}
+            field="title"
+            value={businessPlan.title}
+            className="text-3xl font-bold"
+            onChange={handleFieldChange}
+          />
+        </h1>
+        <div className="flex items-center space-x-4">
+          <Button
+            onClick={handleSave}
+            disabled={loading || Object.keys(changes).length === 0}
+          >
+            <Check className="mr-2 size-4" />
+            保存する
           </Button>
           <Button asChild>
             <Link href={`/business-plans/${businessPlan.id}/action-items`}>
@@ -72,25 +139,54 @@ export default async function BusinessPlanDetailPage({
             <CardTitle>概要</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4">
+            <div className="grid gap-6">
               <div>
                 <h3 className="mb-2 font-semibold">説明</h3>
-                <p className="text-gray-600">{businessPlan.description || "説明なし"}</p>
+                <BusinessPlanInlineEdit
+                  id={businessPlan.id}
+                  field="description"
+                  value={businessPlan.description || ""}
+                  type="textarea"
+                  onChange={handleFieldChange}
+                  className="h-24"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="mb-2 font-semibold">期間</h3>
-                  <p className="text-gray-600">
-                    {formatDate(businessPlan.startDate)}
-                    {" "}
-                    〜
-                    {" "}
-                    {formatDate(businessPlan.endDate)}
-                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-500">開始日</label>
+                      <BusinessPlanInlineEdit
+                        id={businessPlan.id}
+                        field="start_date"
+                        value={businessPlan.start_date || ""}
+                        type="date"
+                        onChange={handleFieldChange}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-500">終了日</label>
+                      <BusinessPlanInlineEdit
+                        id={businessPlan.id}
+                        field="end_date"
+                        value={businessPlan.end_date || ""}
+                        type="date"
+                        onChange={handleFieldChange}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <h3 className="mb-2 font-semibold">ステータス</h3>
-                  <p className="text-gray-600">{businessPlan.status || "未設定"}</p>
+                  <BusinessPlanInlineEdit
+                    id={businessPlan.id}
+                    field="status"
+                    value={businessPlan.status || "draft"}
+                    type="select"
+                    selectOptions={STATUS_OPTIONS}
+                    onChange={handleFieldChange}
+                  />
                 </div>
               </div>
             </div>
@@ -103,55 +199,73 @@ export default async function BusinessPlanDetailPage({
             <CardTitle>5W1H</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <div>
                 <h3 className="mb-2 font-semibold">What（何を）</h3>
-                <p className="text-gray-600">{businessPlan.context?.what || "未設定"}</p>
+                <BusinessPlanInlineEdit
+                  id={businessPlan.id}
+                  field="context.what"
+                  value={businessPlan.context?.what || ""}
+                  type="textarea"
+                  onChange={handleFieldChange}
+                />
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">When（いつ）</h3>
-                <p className="text-gray-600">{businessPlan.context?.when || "未設定"}</p>
+                <BusinessPlanInlineEdit
+                  id={businessPlan.id}
+                  field="context.when"
+                  value={businessPlan.context?.when || ""}
+                  type="textarea"
+                  onChange={handleFieldChange}
+                />
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">Where（どこで）</h3>
-                <p className="text-gray-600">{businessPlan.context?.where || "未設定"}</p>
+                <BusinessPlanInlineEdit
+                  id={businessPlan.id}
+                  field="context.where"
+                  value={businessPlan.context?.where || ""}
+                  type="textarea"
+                  onChange={handleFieldChange}
+                />
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">Who（誰が）</h3>
-                <p className="text-gray-600">{businessPlan.context?.who || "未設定"}</p>
+                <BusinessPlanInlineEdit
+                  id={businessPlan.id}
+                  field="context.who"
+                  value={businessPlan.context?.who || ""}
+                  type="textarea"
+                  onChange={handleFieldChange}
+                />
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">Why（なぜ）</h3>
-                <p className="text-gray-600">{businessPlan.context?.why || "未設定"}</p>
+                <BusinessPlanInlineEdit
+                  id={businessPlan.id}
+                  field="context.why"
+                  value={businessPlan.context?.why || ""}
+                  type="textarea"
+                  onChange={handleFieldChange}
+                />
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">How（どのように）</h3>
-                <p className="text-gray-600">{businessPlan.context?.how || "未設定"}</p>
+                <BusinessPlanInlineEdit
+                  id={businessPlan.id}
+                  field="context.how"
+                  value={businessPlan.context?.how || ""}
+                  type="textarea"
+                  onChange={handleFieldChange}
+                />
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* ガントチャート */}
-        <Card>
-          <CardHeader>
-            <CardTitle>進捗状況</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {businessPlan.startDate && businessPlan.endDate
-              ? (
-                  <BusinessPlanGantt
-                    startDate={businessPlan.startDate}
-                    endDate={businessPlan.endDate}
-                    actionItems={businessPlan.actionItems || []}
-                    milestones={businessPlan.milestones || []}
-                  />
-                )
-              : (
-                  <p className="text-center text-gray-500">期間が設定されていないためガントチャートを表示できません</p>
-                )}
-          </CardContent>
-        </Card>
+        <BusinessPlanGanttSection businessPlan={businessPlan} />
 
         {/* アクションアイテム概要 */}
         <Card>
@@ -166,39 +280,43 @@ export default async function BusinessPlanDetailPage({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4">
-              <div className="grid grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {actionItemCounts.todo}
-                      </p>
-                      <p className="text-sm text-gray-500">未着手</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {actionItemCounts.in_progress}
-                      </p>
-                      <p className="text-sm text-gray-500">進行中</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {actionItemCounts.completed}
-                      </p>
-                      <p className="text-sm text-gray-500">完了</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="grid grid-cols-3 gap-4">
+              {STATUS_OPTIONS.map(({ value, label, icon: Icon, color, bgColor, borderColor }) => {
+                const count = actionItemCounts[value as keyof typeof actionItemCounts]
+                return (
+                  <Link
+                    key={value}
+                    href={`/business-plans/${businessPlan.id}/action-items?status=${value}`}
+                  >
+                    <Card
+                      className={cn(
+                        "border transition-colors hover:shadow-md cursor-pointer",
+                        borderColor,
+                        {
+                          "opacity-50": count === 0,
+                        },
+                      )}
+                    >
+                      <CardContent className={cn("flex items-center gap-4 p-6", bgColor)}>
+                        <Icon className={cn("size-8", color)} />
+                        <div>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {count}
+                          </p>
+                          <p className="text-sm text-gray-600">{label}</p>
+                          {count > 0 && (
+                            <p className="mt-1 text-xs text-gray-500">
+                              クリックして
+                              {label}
+                              のアイテムを表示
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                )
+              })}
             </div>
           </CardContent>
         </Card>

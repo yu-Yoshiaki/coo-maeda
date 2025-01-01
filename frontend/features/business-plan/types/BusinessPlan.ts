@@ -5,48 +5,44 @@ export type MilestoneStatus = "pending" | "completed"
 export interface ActionItem {
   id: string
   title: string
-  description: string
-  startDate: string
-  dueDate: string
+  description: string | null
   status: ActionItemStatus
-  resources: string[]
-  milestoneId?: string
-  businessPlanId: string
-  createdAt: string
-  updatedAt: string
+  start_date: string | null
+  due_date: string | null
+  business_plan_id: string
+  created_at: string
+  updated_at: string
 }
 
 export interface Milestone {
   id: string
   title: string
   description: string
-  dueDate: string
+  due_date: string
   status: MilestoneStatus
-  businessPlanId: string
-  createdAt: string
-  updatedAt: string
+  business_plan_id: string
+  created_at: string
+  updated_at: string
 }
 
 export interface BusinessPlan {
   id: string
   title: string
-  description: string
-  startDate: string
-  endDate: string
-  status: BusinessPlanStatus
-  context: {
-    what: string
-    when: string
-    where: string
-    who: string
-    why: string
-    how: string
+  description: string | null
+  start_date: string | null
+  end_date: string | null
+  status: string
+  context?: {
+    what?: string
+    when?: string
+    where?: string
+    who?: string
+    why?: string
+    how?: string
   }
-  userId: string
-  createdAt: string
-  updatedAt: string
-  actionItems?: ActionItem[]
-  milestones?: Milestone[]
+  action_items?: ActionItem[]
+  created_at: string
+  updated_at: string
 }
 
 export type BusinessPlanInput = Omit<BusinessPlan, "id" | "createdAt" | "updatedAt">
