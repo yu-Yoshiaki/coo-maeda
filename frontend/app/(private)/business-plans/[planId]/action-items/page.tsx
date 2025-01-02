@@ -4,6 +4,7 @@ import type { ActionItem } from "@/features/business-plan/types/BusinessPlan"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Loading } from "@/components/ui/Loading"
+import { ActionItemCreateDialog } from "@/features/business-plan/components/ActionItemCreateDialog"
 import { ActionItemInlineEdit } from "@/features/business-plan/components/ActionItemInlineEdit"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -40,34 +41,35 @@ export default function ActionItemsPage({
     }
   }, [])
 
-  // 初期データの取得
-  useEffect(() => {
-    async function fetchData() {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from("action_items")
-        .select(`
-          id,
-          title,
-          description,
-          status,
-          start_date,
-          due_date,
-          business_plan_id,
-          created_at,
-          updated_at
-        `)
-        .eq("business_plan_id", params.planId)
-        .order("created_at", { ascending: true })
+  // データ取得関数
+  const fetchData = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("action_items")
+      .select(`
+        id,
+        title,
+        description,
+        status,
+        start_date,
+        due_date,
+        business_plan_id,
+        created_at,
+        updated_at
+      `)
+      .eq("business_plan_id", params.planId)
+      .order("created_at", { ascending: true })
 
-      if (error) {
-        console.error("Error fetching action items:", error)
-        return
-      }
-
-      setActionItems(data as ActionItem[])
+    if (error) {
+      console.error("Error fetching action items:", error)
+      return
     }
 
+    setActionItems(data as ActionItem[])
+  }
+
+  // 初期データの取得
+  useEffect(() => {
     fetchData()
   }, [params.planId])
 
@@ -139,7 +141,16 @@ export default function ActionItemsPage({
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold">アクションアイテム一覧</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">アクションアイテム一覧</h1>
+          <ActionItemCreateDialog
+            businessPlanId={params.planId}
+            onCreated={() => {
+              // データを再取得
+              fetchData()
+            }}
+          />
+        </div>
         <div className="flex items-center justify-between border-b pb-4">
           <div className="flex items-center gap-4">
             {STATUS_OPTIONS.map(({ value, label, icon: Icon, color }) => (

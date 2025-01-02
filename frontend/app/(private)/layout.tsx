@@ -1,8 +1,21 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+
 import { createClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
-import { ChevronRight, File, Sparkles } from "lucide-react"
+import { ChevronRight, File, Sparkles, Trash2 } from "lucide-react"
+import { revalidatePath } from "next/cache"
 import Link from "next/link"
 
 export default async function PrivateLayout({
@@ -21,6 +34,7 @@ export default async function PrivateLayout({
         status
       )
     `)
+    .eq("is_deleted", false)
     .order("created_at", { ascending: false })
 
   // 進捗率を計算する関数
@@ -51,7 +65,24 @@ export default async function PrivateLayout({
       href: `/business-plans/${planId}/risks`,
       label: "リスク管理",
     },
+    {
+      href: `/business-plans/${planId}/reports`,
+      label: "レポート",
+    },
   ]
+
+  async function deletePlan(formData: FormData) {
+    "use server"
+    const planId = formData.get("planId") as string
+    const supabase = await createClient()
+
+    await supabase
+      .from("business_plans")
+      .update({ is_deleted: true })
+      .eq("id", planId)
+
+    revalidatePath("/business-plans")
+  }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-pink-50 to-blue-50">
@@ -81,7 +112,37 @@ export default async function PrivateLayout({
                     <summary className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 transition-all duration-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50">
                       <ChevronRight className="size-4 shrink-0 text-purple-500 transition-transform duration-300 group-open:rotate-90" />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium text-gray-700">{plan.title}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="truncate font-medium text-gray-700">{plan.title}</div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-6 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                              >
+                                <Trash2 className="size-4 text-red-500" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>事業計画を削除しますか？</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  この操作は取り消せません。事業計画に関連するすべてのデータが削除されます。
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                                <form action={deletePlan}>
+                                  <input type="hidden" name="planId" value={plan.id} />
+                                  <AlertDialogAction type="submit" className="bg-red-500 hover:bg-red-600">
+                                    削除する
+                                  </AlertDialogAction>
+                                </form>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                         <div className="mt-1 flex items-center gap-2">
                           <Progress
                             value={progress}
