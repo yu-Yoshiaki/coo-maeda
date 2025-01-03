@@ -49,20 +49,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* CTAセクション */}
-      <section className="bg-blue-50 px-4 py-20 text-center">
-        <h2 className="mb-6 text-3xl font-bold">今すぐ始めましょう</h2>
-        <p className="mb-8 text-xl text-gray-600">
-          無料トライアルで実際の効果を体験できます
-        </p>
-        <a
-          href="/login"
-          className="rounded-lg bg-blue-600 px-8 py-3 text-white transition hover:bg-blue-700"
-        >
-          アカウント作成
-        </a>
-      </section>
     </main>
   )
 }

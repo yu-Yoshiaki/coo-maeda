@@ -26,79 +26,82 @@ export interface OpenAIError {
  * デフォルトの設定値
  */
 const DEFAULT_CONFIG: OpenAIConfigType = {
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || "",
-  model: "gpt-4",
-  maxTokens: 2000,
-  temperature: 0.7,
+  apiKey: process.env.OPENAI_API_KEY || "",
+  model: "gpt-4o-mini",
+  maxTokens: 500,
+  temperature: 1,
   timeout: 30000,
 }
 
+// シングルトンインスタンスを保持する変数
+let instance: {
+  config: OpenAIConfigType
+  api: OpenAI
+} | null = null
+
 /**
- * OpenAI API設定クラス
+ * OpenAI APIインスタンスを初期化して取得
  */
-export class OpenAIConfig {
-  private static instance: OpenAIConfig
-  private config: OpenAIConfigType
-  private api: OpenAI
-
-  private constructor(config: Partial<OpenAIConfigType> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config }
-    this.api = new OpenAI({
-      apiKey: this.config.apiKey,
-    })
+export function createOpenAIClient(config: Partial<OpenAIConfigType> = {}): OpenAI {
+  if (typeof window !== "undefined") {
+    throw new TypeError("OpenAI client can only be created on the server side")
   }
 
-  /**
-   * シングルトンインスタンスを取得
-   */
-  public static getInstance(config?: Partial<OpenAIConfigType>): OpenAIConfig {
-    if (!OpenAIConfig.instance) {
-      OpenAIConfig.instance = new OpenAIConfig(config)
+  if (!instance) {
+    const mergedConfig = { ...DEFAULT_CONFIG, ...config }
+    if (!mergedConfig.apiKey) {
+      throw new Error("OpenAI API key is not set")
     }
-    return OpenAIConfig.instance
+
+    instance = {
+      config: mergedConfig,
+      api: new OpenAI({
+        apiKey: mergedConfig.apiKey,
+      }),
+    }
   }
 
-  /**
-   * OpenAI APIインスタンスを取得
-   */
-  public getApi(): OpenAI {
-    return this.api
+  return instance.api
+}
+
+/**
+ * 現在の設定を取得（APIキーを除く）
+ */
+export function getOpenAIConfig(): Omit<OpenAIConfigType, "apiKey"> {
+  if (!instance) {
+    throw new Error("OpenAI client has not been initialized")
   }
 
-  /**
-   * 現在の設定を取得
-   */
-  public getConfig(): OpenAIConfigType {
-    return this.config
-  }
+  const { apiKey: _, ...config } = instance.config
+  return config
+}
 
-  /**
-   * エラーをOpenAIError型に変換
-   */
-  public static handleError(error: unknown): OpenAIError {
-    if (error instanceof Error) {
-      if ("response" in error) {
-        return {
-          code: "api_error",
-          message: error.message,
-          type: "api_error",
-          original: error,
-        }
-      }
+/**
+ * エラーをOpenAIError型に変換
+ */
+export function handleOpenAIError(error: unknown): OpenAIError {
+  if (error instanceof Error) {
+    if ("response" in error) {
       return {
-        code: error.name,
+        code: "api_error",
         message: error.message,
         type: "api_error",
         original: error,
       }
     }
     return {
-      code: "unknown_error",
-      message: "An unknown error occurred",
+      code: error.name,
+      message: error.message,
       type: "api_error",
       original: error,
     }
   }
+  return {
+    code: "unknown_error",
+    message: "An unknown error occurred",
+    type: "api_error",
+    original: error,
+  }
 }
 
-export default OpenAIConfig
+export default createOpenAIClient

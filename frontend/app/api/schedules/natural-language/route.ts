@@ -1,42 +1,38 @@
-import { naturalLanguageToSchedulePrompt } from "@/lib/llm/prompts/schedules"
-import { LLMAnalyzer } from "@/lib/llm/services/analyzer"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createOpenAIClient } from "@/lib/llm/config"
+import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    // リクエストボディの取得
-    const body = await request.json()
-    const { input } = body
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // 認証チェック
-    const supabase = createRouteHandlerClient({ cookies })
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      )
+    if (!user) {
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    // LLMアナライザーの初期化
-    const analyzer = new LLMAnalyzer()
+    const { text } = await request.json()
+    const openai = createOpenAIClient()
+    const response = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "自然言語の文章からスケジュール情報を抽出してください。日時、参加者、場所、目的などの情報を含めてください。",
+        },
+        { role: "user", content: text },
+      ],
+      model: "gpt-4o-mini",
+      temperature: 1,
+      max_tokens: 1000,
+    })
 
-    // プロンプトの作成と実行
-    const prompt = naturalLanguageToSchedulePrompt(input)
-    const result = await analyzer.analyzeJSON(prompt)
-
-    return NextResponse.json(result)
+    return NextResponse.json({
+      content: response.choices[0]?.message?.content || "",
+    })
   }
   catch (error) {
     console.error("Error in natural language processing:", error)
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    )
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
 

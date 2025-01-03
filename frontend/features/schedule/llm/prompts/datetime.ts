@@ -73,6 +73,6 @@ export const dateTimeProposalPrompt: PromptConfig = {
 }
 `,
   userPrompt: "以下の条件で適切な日時を提案してください：",
-  temperature: 0.7,
+  temperature: 1,
   maxTokens: 500,
 }

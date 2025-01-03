@@ -161,7 +161,7 @@ ${currentSchedule.events
 }
 `,
     config: {
-      temperature: 0.7,
+      temperature: 1,
       maxTokens: 1500,
     },
   }

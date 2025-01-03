@@ -66,7 +66,7 @@ ${context.milestones?.map((milestone: any) => `- ${milestone.title} (${milestone
 
     // OpenAIのAPIを呼び出し
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -77,7 +77,7 @@ ${context.milestones?.map((milestone: any) => `- ${milestone.title} (${milestone
           content: message,
         },
       ],
-      temperature: 0.7,
+      temperature: 1,
       max_tokens: 1000,
     })
 

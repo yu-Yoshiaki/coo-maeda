@@ -61,6 +61,6 @@ export const scheduleProposalPrompt: PromptConfig = {
 }
 `,
   userPrompt: "以下の条件で適切な時間帯を提案してください：",
-  temperature: 0.7,
+  temperature: 1,
   maxTokens: 1000,
 }

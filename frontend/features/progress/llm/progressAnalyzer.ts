@@ -68,7 +68,7 @@ export class ProgressAnalyzer {
   private async runProgressAnalysis(context: PromptContext): Promise<any> {
     const prompt = generateProgressAnalysisPrompt(context)
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -94,7 +94,7 @@ export class ProgressAnalyzer {
   private async runRiskAnalysis(context: PromptContext): Promise<any> {
     const prompt = generateRiskAnalysisPrompt(context)
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -120,7 +120,7 @@ export class ProgressAnalyzer {
   private async runRecommendationAnalysis(context: PromptContext): Promise<any> {
     const prompt = generateRecommendationPrompt(context)
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",

@@ -133,9 +133,9 @@ export async function onRequest(context: Context) {
 
   // OpenAI API呼び出し
   const completion = await openai.chat.completions.create({
-    model: "gpt-4",
+    model: "gpt-4o-mini",
     messages,
-    temperature: 0.7,
+    temperature: 1,
   })
 
   return res.json(completion.choices[0].message)

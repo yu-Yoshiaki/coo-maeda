@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
     // OpenAI APIを使用して分析を実行
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",

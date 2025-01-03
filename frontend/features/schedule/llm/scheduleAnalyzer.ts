@@ -22,7 +22,7 @@ export async function analyzeSchedule(text: string): Promise<ScheduleAnalysisRes
   try {
     // OpenAI APIを呼び出してスケジュール情報を抽出
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -78,7 +78,7 @@ export async function proposeSchedule(
   > {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -124,7 +124,7 @@ export async function analyzeDateTimeExpression(
   }> {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",

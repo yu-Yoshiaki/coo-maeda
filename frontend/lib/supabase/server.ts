@@ -1,5 +1,5 @@
 /* eslint-disable node/prefer-global/process */
-import { createServerClient } from "@supabase/ssr"
+import { type CookieOptions, createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 export async function createClient() {
@@ -10,28 +10,30 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll()
+        get(name: string) {
+          return cookieStore.get(name)?.value
         },
-        setAll(cookiesToSet) {
+        set(name: string, value: string, options?: CookieOptions) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              if (name === "sb-access-token" || name === "sb-refresh-token") {
-                options = {
-                  ...options,
-                  maxAge: 60 * 60 * 24,
-                  secure: true,
-                  sameSite: "lax",
-                }
+            if (name === "sb-access-token" || name === "sb-refresh-token") {
+              options = {
+                ...options,
+                maxAge: 60 * 60 * 24, // 24時間
+                secure: true,
+                sameSite: "lax",
+                path: "/",
+                httpOnly: true,
               }
-              cookieStore.set(name, value, options)
-            })
+            }
+            cookieStore.set(name, value, options)
           }
           catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // サーバーコンポーネントからの呼び出しは無視
+            // ミドルウェアでセッションをリフレッシュする場合は問題なし
           }
+        },
+        remove(name: string, options?: CookieOptions) {
+          cookieStore.set(name, "", { ...options, maxAge: -1 })
         },
       },
       auth: {

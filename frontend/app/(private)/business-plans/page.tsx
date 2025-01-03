@@ -1,4 +1,4 @@
-import { BusinessPlanAIAnalyzer } from "@/features/business-plan/components/BusinessPlanAIAnalyzer"
+import BusinessPlanAIAnalyzer from "@/features/business-plan/components/BusinessPlanAIAnalyzer"
 
 // export const metadata = {
 //   title: "事業計画管理 - COO前田くんAI",

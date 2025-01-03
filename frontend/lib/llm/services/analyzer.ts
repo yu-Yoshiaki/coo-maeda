@@ -1,108 +1,39 @@
-import type OpenAI from "openai"
-import type { BasePrompt } from "../prompts/business-plans"
-import { OpenAIConfig } from "../config"
+import { createOpenAIClient, handleOpenAIError } from "../config"
 
 /**
- * LLM分析サービス
+ * プロンプトを解析して応答を取得
  */
-export class LLMAnalyzer {
-  private openai: OpenAI
-  private config: OpenAIConfig
+export async function analyze(prompt: string): Promise<string> {
+  try {
+    const api = createOpenAIClient()
+    const response = await api.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4o-mini",
+      temperature: 1,
+      max_tokens: 1000,
+    })
 
-  constructor() {
-    this.config = OpenAIConfig.getInstance()
-    this.openai = this.config.getApi()
+    const content = response.choices[0]?.message?.content
+    if (!content) {
+      throw new Error("No response from OpenAI")
+    }
+
+    return content
   }
-
-  /**
-   * プロンプトを実行して結果を取得
-   */
-  public async analyze(prompt: BasePrompt): Promise<string> {
-    try {
-      const response = await this.openai.chat.completions.create({
-        model: this.config.getConfig().model,
-        messages: [
-          {
-            role: "system",
-            content: prompt.systemPrompt,
-          },
-          {
-            role: "user",
-            content: prompt.userPrompt,
-          },
-        ],
-        ...prompt.config,
-      })
-
-      if (!response.choices[0]?.message?.content) {
-        throw new Error("No response from OpenAI")
-      }
-
-      return response.choices[0].message.content
-    }
-    catch (error) {
-      throw OpenAIConfig.handleError(error)
-    }
+  catch (error) {
+    throw handleOpenAIError(error)
   }
+}
 
-  /**
-   * ストリーミングでプロンプトを実行
-   */
-  public async *analyzeStream(
-    prompt: BasePrompt,
-  ): AsyncGenerator<string, void, unknown> {
-    try {
-      const stream = await this.openai.chat.completions.create({
-        model: this.config.getConfig().model,
-        messages: [
-          {
-            role: "system",
-            content: prompt.systemPrompt,
-          },
-          {
-            role: "user",
-            content: prompt.userPrompt,
-          },
-        ],
-        ...prompt.config,
-        stream: true,
-      })
-
-      for await (const chunk of stream) {
-        if (chunk.choices[0]?.delta?.content) {
-          yield chunk.choices[0].delta.content
-        }
-      }
-    }
-    catch (error) {
-      throw OpenAIConfig.handleError(error)
-    }
+/**
+ * プロンプトを解析してJSON形式で応答を取得
+ */
+export async function analyzeJSON<T>(prompt: string): Promise<T> {
+  const response = await analyze(prompt)
+  try {
+    return JSON.parse(response) as T
   }
-
-  /**
-   * 複数のプロンプトを順次実行
-   */
-  public async analyzeSequence(
-    prompts: BasePrompt[],
-  ): Promise<string[]> {
-    const results: string[] = []
-    for (const prompt of prompts) {
-      const result = await this.analyze(prompt)
-      results.push(result)
-    }
-    return results
-  }
-
-  /**
-   * プロンプトの実行結果をJSON形式で取得
-   */
-  public async analyzeJSON<T>(prompt: BasePrompt): Promise<T> {
-    const result = await this.analyze(prompt)
-    try {
-      return JSON.parse(result) as T
-    }
-    catch {
-      throw new Error("Failed to parse JSON response")
-    }
+  catch {
+    throw new Error("Failed to parse JSON response")
   }
 }

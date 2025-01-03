@@ -1,192 +1,109 @@
 "use client"
 
-import type { BusinessPlanInput } from "../types/BusinessPlan"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Textarea } from "@/components/ui/textarea"
+import type { ChatMessage } from "@/lib/llm/types"
 import { useState } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { mutate } from "swr"
-import { businessPlanApi } from "../api/businessPlanApi"
 
-interface Message {
-  role: "user" | "assistant"
-  content: string
+interface Props {
+  initialMessage?: string
 }
 
-export function BusinessPlanAIAnalyzer() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [context, setContext] = useState<string[]>([])
+export default function BusinessPlanAIAnalyzer({ initialMessage = "" }: Props) {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [input, setInput] = useState(initialMessage)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleContinueChat = async () => {
-    if (!input.trim())
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading)
       return
-    setIsAnalyzing(true)
 
+    setIsLoading(true)
     try {
-      // ユーザーメッセージを追加
-      const userMessage: Message = { role: "user" as const, content: input }
-      const newMessages = [...messages, userMessage]
-      setMessages(newMessages)
+      const userMessage: ChatMessage = {
+        role: "user",
+        content: input,
+        timestamp: new Date().toISOString(),
+      }
+      setMessages(prev => [...prev, userMessage])
       setInput("")
 
-      // AIからの応答を取得
       const response = await fetch("/api/business-plans/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages,
-          context,
+          messages: [...messages, userMessage].map(({ role, content }) => ({
+            role,
+            content,
+          })),
         }),
       })
 
       if (!response.ok) {
-        throw new Error("チャットに失敗しました")
+        throw new Error("API request failed")
       }
 
       const data = await response.json()
-      const assistantMessage: Message = {
-        role: "assistant" as const,
-        content: data.message,
+      const assistantMessage: ChatMessage = {
+        role: "assistant",
+        content: data.content,
+        timestamp: new Date().toISOString(),
       }
-      setMessages([...newMessages, assistantMessage])
-      setContext([...context, data.context])
+      setMessages(prev => [...prev, assistantMessage])
     }
     catch (error) {
-      console.error("Failed to chat:", error)
+      console.error("Error sending message:", error)
     }
     finally {
-      setIsAnalyzing(false)
-    }
-  }
-
-  const handleCreatePlan = async () => {
-    setIsAnalyzing(true)
-
-    try {
-      const response = await fetch("/api/business-plans/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ context }),
-      })
-
-      if (!response.ok) {
-        throw new Error("分析に失敗しました")
-      }
-
-      const analyzedPlan: BusinessPlanInput = await response.json()
-      await businessPlanApi.create(analyzedPlan)
-      mutate("business-plans")
-
-      // チャット履歴をクリア
-      setMessages([])
-      setContext([])
-      setInput("")
-    }
-    catch (error) {
-      console.error("Failed to analyze business plan:", error)
-    }
-    finally {
-      setIsAnalyzing(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <Card className="bg-white p-6 shadow">
-      <h2 className="mb-4 text-xl font-semibold">事業計画の作成</h2>
-
-      <ScrollArea className="mb-4 h-[400px] pr-4">
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {messages.map((message, index) => (
           <div
-            key={`message-${index}`}
-            className={`mb-4 flex ${
+            key={`${message.timestamp}-${index}`}
+            className={`flex ${
               message.role === "user" ? "justify-end" : "justify-start"
             }`}
           >
             <div
-              className={`w-fit max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[80%] rounded-lg p-3 ${
                 message.role === "user"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-900"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800"
               }`}
             >
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                {message.role === "user"
-                  ? (
-                      <div className="whitespace-pre-wrap break-words text-sm">
-                        {message.content}
-                      </div>
-                    )
-                  : (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        className="whitespace-pre-wrap break-words text-sm"
-                        components={{
-                          // リンクを新しいタブで開く
-                          a: ({ node, ...props }) => (
-                            <a target="_blank" rel="noopener noreferrer" {...props} />
-                          ),
-                          // コードブロックのスタイリング
-                          code: ({ node, inline, className, ...props }: { node?: any, inline?: boolean, className?: string }) =>
-                            inline
-                              ? (
-                                  <code
-                                    className={`rounded bg-gray-200 px-1 py-0.5 text-sm dark:bg-gray-800 ${className || ""}`}
-                                    {...props}
-                                  />
-                                )
-                              : (
-                                  <code
-                                    className={`block overflow-x-auto rounded bg-gray-200 p-2 text-sm dark:bg-gray-800 ${className || ""}`}
-                                    {...props}
-                                  />
-                                ),
-                        }}
-                      >
-                        {message.content}
-                      </ReactMarkdown>
-                    )}
-              </div>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.content}
+              </ReactMarkdown>
             </div>
           </div>
         ))}
-      </ScrollArea>
+      </div>
 
-      <div className="space-y-4">
-        <div>
-          <Textarea
+      <form onSubmit={handleSubmit} className="border-t p-4">
+        <div className="flex gap-2">
+          <input
+            type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            rows={4}
-            className="w-full"
-            placeholder="事業計画について教えてください。例: AIを活用した営業支援システムを開発したいと考えています。"
+            placeholder="メッセージを入力..."
+            className="flex-1 rounded border p-2"
+            disabled={isLoading}
           />
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <Button
-            onClick={handleContinueChat}
-            disabled={isAnalyzing || !input.trim()}
-            variant="secondary"
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
           >
-            {isAnalyzing ? "応答中..." : "計画を立てる"}
-          </Button>
-          <Button
-            onClick={handleCreatePlan}
-            disabled={isAnalyzing || messages.length === 0}
-          >
-            事業計画書を作成する
-          </Button>
+            送信
+          </button>
         </div>
-      </div>
-    </Card>
+      </form>
+    </div>
   )
 }

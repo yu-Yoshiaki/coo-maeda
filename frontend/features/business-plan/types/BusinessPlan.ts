@@ -29,22 +29,13 @@ export interface Milestone {
 export interface BusinessPlan {
   id: string
   title: string
-  description: string | null
-  start_date: string | null
-  end_date: string | null
-  status: string
-  context?: {
-    what?: string
-    when?: string
-    where?: string
-    who?: string
-    why?: string
-    how?: string
-  }
-  action_items?: ActionItem[]
-  milestones?: Milestone[]
-  created_at: string
-  updated_at: string
+  description: string
+  goals: string[]
+  risks: string[]
+  createdAt: Date
+  updatedAt: Date
+  userId: string
+  isDeleted?: boolean
 }
 
 export type BusinessPlanInput = Omit<BusinessPlan, "id" | "createdAt" | "updatedAt">

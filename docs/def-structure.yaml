@@ -29,6 +29,38 @@ root:
               - console文は本番環境で禁止
               - 型安全性の確保
               - useMemoによる最適化
+            - コーディングスタイル
+              - 関数ベースのアプローチを優先
+              - クラスの使用は以下の場合のみ許可
+                - シングルトン（設定管理等）
+                - 複雑な状態管理が必要な場合
+                - 外部ライブラリとの統合で必要な場合
+              - 純粋関数を優先
+              - 副作用の最小化
+              - エクスポート規約
+                - コンポーネントは原則default export
+                - 型定義は named export
+                - ユーティリティ関数は named export
+                - 定数は named export
+              - 設定変更の原則
+                - 明示的な指示がある場合のみ変更可能
+                - セキュリティに関する変更は例外として許可
+                - モデル・パラメータ等は指示なしでは変更禁止
+                - 環境変数名の変更は影響範囲を要確認
+            - デザイン規約
+              - デザイン変更の原則
+                - 明示的な指示がある場合のみ変更可能
+                - 指示がない場合は既存デザインを維持
+              - コンポーネントライブラリの統一
+                - @/components/ui/* の使用を優先
+                - Tailwindクラスの一貫性を保持
+              - レイアウトの一貫性
+                - 既存のスペーシング・サイズを踏襲
+                - レスポンシブデザインの維持
+              - リファクタリング時の注意
+                - デザインの変更は明示的な指示がある場合のみ
+                - 機能改善やリファクタリング時も既存UIを維持
+                - パフォーマンス改善時もデザインの一貫性を優先
           - Tailwind設定
             - カスタムクラス名はtheme.extendで定義
             - アニメーション設定
@@ -267,14 +299,32 @@ root:
                     自然言語処理API
                     外部依存:
                     - @/lib/auth
+                    - @/lib/supabase/server
                     - next/server
                     - openai
                     機能:
+                    - 認証チェック
+                      - createClient()による認証クライアント取得
+                      - getUser()による認証確認
+                      - 未認証時の401エラー
                     - 自然言語からスケジュール生成
                     - 日時抽出
                     - 参加者抽出
                   dependency:
-                    - /frontend/lib/auth.ts
+                    - /frontend/lib/supabase/server.ts
+              schedule.ts:
+                content: |-
+                  スケジュールAPI
+                  外部依存:
+                  - axios
+                  機能:
+                  - スケジュールCRUD操作
+                  - スケジュール分析
+                  - 自然言語処理
+                  - カレンダー同期
+                dependency:
+                  - /frontend/lib/db.ts
+                  - /frontend/lib/openai.ts
           layout.tsx:
             content: |-
               ルートレイアウト
@@ -544,61 +594,90 @@ root:
                 - openai
                 機能:
                 - OpenAI API設定
-                - モデル設定
-                - トークン制限設定
+                  - 関数ベースの実装
+                    - createOpenAIClient: クライアント初期化
+                    - getOpenAIConfig: 設定取得
+                    - handleOpenAIError: エラー処理
+                  - シングルトンパターン
+                    - クロージャによる状態管理
+                    - サーバーサイド限定
+                  - 型安全性
+                    - OpenAIConfigType
+                    - OpenAIError
                 - エラーハンドリング設定
-              dependency: []
-            prompts:
-              business-plans.ts:
+                  - API エラー
+                  - レート制限
+                  - トークン制限
+                  - タイムアウト
+              services:
+                analyzer.ts:
+                  content: |-
+                    LLM分析サービス
+                    外部依存:
+                    - ./config
+                    機能:
+                    - プロンプト解析
+                      - analyze: テキスト解析
+                      - analyzeJSON: JSON解析
+                    - 関数ベースAPI
+                      - 純粋関数による実装
+                      - 副作用の最小化
+                      - 型安全性の確保
+                    - エラーハンドリング
+                      - OpenAIエラー処理
+                      - JSON解析エラー処理
+                chat.ts:
+                  content: |-
+                    チャットサービス
+                    外部依存:
+                    - ./config
+                    - ./types
+                    機能:
+                    - メッセージ処理
+                      - sendMessage: 通常送信
+                      - sendMessageStream: ストリーミング送信
+                    - 履歴管理
+                      - イミュータブルな履歴更新
+                      - ISO8601形式のタイムスタンプ
+                    - 関数ベースAPI
+                      - 純粋関数による実装
+                      - 副作用の最小化
+                      - 型安全性の確保
+                types.ts:
+                  content: |-
+                    LLM型定義
+                    機能:
+                    - チャットメッセージ型
+                      - role: ユーザー/アシスタント/システム
+                      - content: メッセージ内容
+                      - timestamp: ISO8601形式の文字列
+                    - チャット履歴型
+                      - messages: メッセージ配列
+                      - metadata: オプショナルなメタデータ
+                prompts:
+                  business-plans.ts:
+                    content: |-
+                      事業計画プロンプト
+                      機能:
+                      - プロンプト生成
+                        - generateBusinessPlanPrompt
+                          - 分析プロンプト
+                          - 改善プロンプト
+                          - リスク分析プロンプト
+                      - 関数ベースAPI
+                        - 純粋関数による実装
+                        - 型安全性の確保
+              types.ts:
                 content: |-
-                  事業計画関連プロンプト
-                  外部依存:
-                  - ./config
+                  LLM型定義
                   機能:
-                  - 事業計画分析プロンプト
-                  - KPI分析プロンプト
-                  - リスク分析プロンプト
-                dependency:
-                  - /frontend/lib/llm/config.ts
-              schedules.ts:
-                content: |-
-                  スケジュール関連プロンプト
-                  外部依存:
-                  - ./config
-                  機能:
-                  - スケジュール分析プロンプト
-                  - 自然言語処理プロンプト
-                  - 最適化提案プロンプト
-                dependency:
-                  - /frontend/lib/llm/config.ts
-            services:
-              analyzer.ts:
-                content: |-
-                  LLM分析サービス
-                  外部依存:
-                  - ./config
-                  - ./prompts/*
-                  機能:
-                  - コンテキスト管理
-                  - プロンプト実行
-                  - レスポンス解析
-                  - エラーハンドリング
-                dependency:
-                  - /frontend/lib/llm/config.ts
-                  - /frontend/lib/llm/prompts/*
-              chat.ts:
-                content: |-
-                  チャットサービス
-                  外部依存:
-                  - ./config
-                  - ./prompts/*
-                  機能:
-                  - チャット履歴管理
-                  - メッセージ生成
-                  - ストリーミング処理
-                dependency:
-                  - /frontend/lib/llm/config.ts
-                  - /frontend/lib/llm/prompts/*
+                  - チャットメッセージ型
+                    - role: ユーザー/アシスタント/システム
+                    - content: メッセージ内容
+                    - timestamp: ISO8601形式の文字列
+                  - チャット履歴型
+                    - messages: メッセージ配列
+                    - metadata: オプショナルなメタデータ
           auth.ts:
             content: |-
               認証関連機能
@@ -606,7 +685,9 @@ root:
               - @supabase/supabase-js
               機能:
               - Supabase認証クライアント
-              - セッション管理
+              - ユーザー情報取得
+                - getUser()による認証チェック
+                - トークン管理
               - 権限管理
               - ソーシャルログイン
             dependency: []
@@ -641,15 +722,21 @@ root:
                 - next/headers
                 機能:
                 - Supabaseクライアント設定
-                  - セッション管理
-                    - 24時間有効期限
-                    - セキュアCookie設定
-                    - SameSite設定
-                  - 認証設定
+                  - createClient関数の提供
+                    - 共通の認証クライアント生成
+                    - クッキー設定の一元管理
+                      - 24時間有効期限
+                      - base64エンコーディング対応
+                      - セキュアCookie設定
+                      - SameSite設定
+                      - 暗号化対応
                     - トークン自動更新
                     - セッション永続化
                     - URLセッション検出
                   - エラーハンドリング
+                    - クッキーパースエラー処理
+                    - セッション無効時の処理
+                    - トークン期限切れ処理
                 dependency: []
             client.ts:
               content: |-

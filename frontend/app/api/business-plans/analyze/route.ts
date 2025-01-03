@@ -1,47 +1,32 @@
-import { analyzePlanPrompt } from "@/lib/llm/prompts/business-plans"
-import { LLMAnalyzer } from "@/lib/llm/services/analyzer"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createOpenAIClient } from "@/lib/llm/config"
+import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    // リクエストボディの取得
-    const body = await request.json()
-    const { title, description, goals, risks } = body
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // 認証チェック
-    const supabase = createRouteHandlerClient({ cookies })
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      )
+    if (!user) {
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    // LLMアナライザーの初期化
-    const analyzer = new LLMAnalyzer()
-
-    // プロンプトの作成と実行
-    const prompt = analyzePlanPrompt({
-      title,
-      description,
-      goals,
-      risks,
+    const { prompt } = await request.json()
+    const openai = createOpenAIClient()
+    const response = await openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4o-mini",
+      temperature: 1,
+      max_tokens: 1000,
     })
-    const analysis = await analyzer.analyze(prompt)
 
-    return NextResponse.json({ analysis })
+    return NextResponse.json({
+      content: response.choices[0]?.message?.content || "",
+    })
   }
   catch (error) {
     console.error("Error in business plan analysis:", error)
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    )
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
 
