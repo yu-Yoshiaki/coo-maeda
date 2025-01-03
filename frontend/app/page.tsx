@@ -1,10 +1,6 @@
-import { ChatInterface } from "@/components/chat/ChatInterface"
-import { MainLayout } from "@/components/layout/MainLayout"
+// import { redirect } from "next/navigation"
 
 export default function Home() {
-  return (
-    <MainLayout>
-      <ChatInterface />
-    </MainLayout>
-  )
+  // redirect("/business-plans")
+  return <div>Hello</div>
 }

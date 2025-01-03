@@ -191,11 +191,35 @@ root:
                 外部依存:
                 - react
                 - next
+                - @/lib/supabase/server
+                - next/navigation
+                - @/components/ui/avatar
+                - @/components/ui/button
                 機能:
                 - 認証チェック
+                  - getUser()によるユーザー認証
+                  - JWTトークンのサーバーサイド検証
+                  - データベースからの最新ユーザー情報取得
+                  - 未認証時のリダイレクト
+                  - 認証状態の維持
                 - ナビゲーション
-                - サイドバー
-              dependency: []
+                  - サイドバー表示
+                    - メニュー管理
+                    - 進捗表示
+                    - ユーザー情報表示
+                      - アバター画像
+                      - メールアドレス
+                    - サインアウトボタン
+                - レイアウト管理
+                  - グリッドレイアウト
+                  - レスポンシブ対応
+                  - 背景デザイン
+              dependency:
+                - /frontend/lib/supabase/server.ts
+                - /frontend/components/ui/alert-dialog.tsx
+                - /frontend/components/ui/button.tsx
+                - /frontend/components/ui/progress.tsx
+                - /frontend/components/ui/avatar.tsx
           api:
             schedules:
               analyze:
@@ -512,6 +536,25 @@ root:
               - コンテキスト管理
               - エラーハンドリング
             dependency: []
+          supabase:
+            server.ts:
+              content: |-
+                Supabaseサーバークライアント
+                外部依存:
+                - @supabase/ssr
+                - next/headers
+                機能:
+                - Supabaseクライアント設定
+                  - セッション管理
+                    - 24時間有効期限
+                    - セキュアCookie設定
+                    - SameSite設定
+                  - 認証設定
+                    - トークン自動更新
+                    - セッション永続化
+                    - URLセッション検出
+                  - エラーハンドリング
+                dependency: []
       supabase:
         migrations:
           20240101000000_create_schedules.sql:
@@ -535,3 +578,26 @@ root:
               - インデックス作成
               - マイグレーション処理
             dependency: []
+        middleware.ts:
+          content: |-
+            ミドルウェア
+            外部依存:
+            - next/server
+            - @/lib/supabase/server
+            機能:
+            - 認証ミドルウェア
+              - プライベートルート保護
+                - /(private)配下のアクセス制御
+                - 未認証時の/loginリダイレクト
+              - ユーザー認証
+                - auth.getUser()による認証チェック
+                - エラーハンドリング
+            - パス情報管理
+              - x-pathnameヘッダー設定
+              - リクエストヘッダー管理
+              - レスポンスヘッダー管理
+            - セッション管理
+              - Supabaseセッション更新
+          dependency:
+            - /frontend/lib/supabase/server.ts
+            - /frontend/lib/supabase/middleware.ts

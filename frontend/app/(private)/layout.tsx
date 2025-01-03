@@ -9,14 +9,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 
 import { createClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
-import { ChevronRight, File, Sparkles, Trash2 } from "lucide-react"
+import { ChevronRight, File, LogOut, Sparkles, Trash2 } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 export default async function PrivateLayout({
   children,
@@ -24,6 +26,18 @@ export default async function PrivateLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
+
+  // ユーザー認証チェック
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  // 未認証またはエラーの場合はログインページにリダイレクト
+  if (userError || !user) {
+    redirect("/login")
+  }
+
   const { data: plans } = await supabase
     .from("business_plans")
     .select(`
@@ -87,7 +101,7 @@ export default async function PrivateLayout({
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-pink-50 to-blue-50">
       {/* サイドメニュー */}
-      <div className="w-64 border-r bg-white/80 shadow-lg backdrop-blur-sm">
+      <div className="flex w-64 flex-col justify-between border-r bg-white/80 shadow-lg backdrop-blur-sm">
         <div className="p-4">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-lg font-bold text-transparent">
@@ -176,6 +190,31 @@ export default async function PrivateLayout({
               )
             })}
           </nav>
+        </div>
+
+        {/* ユーザー情報とサインアウト */}
+        <div className="border-t bg-white/50 p-4">
+          <div className="flex items-center gap-3">
+            <Avatar>
+              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-gray-700">
+                {user?.email}
+              </p>
+            </div>
+            <form action="/auth/signout" method="post">
+              <Button
+                type="submit"
+                variant="ghost"
+                size="icon"
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <LogOut className="size-4" />
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
 
