@@ -11,18 +11,6 @@ interface BusinessPlanGanttProps {
   milestones: Milestone[]
 }
 
-// ステータスに応じた色を返す関数
-function getStatusColor(status: string): string {
-  switch (status) {
-    case "completed":
-      return "#4CAF50" // 緑
-    case "in_progress":
-      return "#2196F3" // 青
-    default:
-      return "#FFC107" // 黄
-  }
-}
-
 export function BusinessPlanGantt({
   startDate,
   endDate,
@@ -61,8 +49,8 @@ export function BusinessPlanGantt({
           `action-${index}`,
           `${item.title} (${statusText})`,
           item.resources?.join(", ") || "未定",
-          new Date(item.start_date),
-          new Date(item.due_date),
+          item.start_date ? new Date(item.start_date) : null,
+          item.due_date ? new Date(item.due_date) : null,
           null,
           item.status === "completed" ? 100 : item.status === "in_progress" ? 50 : 0,
           prevItemId,
@@ -71,9 +59,6 @@ export function BusinessPlanGantt({
       // マイルストーン
       ...milestones.map((milestone, index) => {
         const relatedActions = actionItems
-          .filter(item => item.milestone_id === milestone.id)
-          .map((_, i) => `action-${i}`)
-          .join(",")
 
         const statusText = milestone.status === "completed" ? "完了" : "未完了"
         return [

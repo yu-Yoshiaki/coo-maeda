@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 
 import { createClient } from "@/lib/supabase/server"
-import { cn } from "@/lib/utils"
 import { ChevronRight, File, LogOut, Sparkles, Trash2 } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"

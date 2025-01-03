@@ -1,14 +1,14 @@
 "use client"
 
 import type { Schedule } from "../types"
+import { useSchedule } from "@/hooks/schedule/useSchedule"
 import { useState } from "react"
-import { useSchedules } from "../hooks/useSchedule"
 
 export function ScheduleManager() {
-  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
-  const { schedules, isLoading, error } = useSchedules()
+  const [_selectedSchedule, _setSelectedSchedule] = useState<Schedule | null>(null)
+  const { schedules: _schedules, loading, error } = useSchedule()
 
-  if (isLoading) {
+  if (loading) {
     return <div>読み込み中...</div>
   }
 

@@ -1,4 +1,4 @@
-import { Schedule, scheduleSchema } from "@/features/schedule/types"
+import { scheduleSchema } from "@/features/schedule/types"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"

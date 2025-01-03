@@ -16,7 +16,7 @@ export function BusinessPlanGanttSection({ businessPlan }: { businessPlan: Busin
               <BusinessPlanGantt
                 startDate={businessPlan.start_date}
                 endDate={businessPlan.end_date}
-                actionItems={businessPlan.actionItems || []}
+                actionItems={businessPlan.action_items || []}
                 milestones={businessPlan.milestones || []}
               />
             )

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { createClient } from "@/lib/supabase/client"
 import { Send } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -68,7 +67,7 @@ export function BusinessPlanAgent({ plan }: { plan: BusinessPlan }) {
               description: plan.description,
               status: plan.status,
               context: plan.context,
-              actionItems: plan.actionItems,
+              actionItems: plan.action_items,
               milestones: plan.milestones,
             },
           }),

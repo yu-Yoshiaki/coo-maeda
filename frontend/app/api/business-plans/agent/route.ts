@@ -50,10 +50,10 @@ export async function POST(request: Request) {
 - How（どのように）: ${context.context.how}
 
 【アクションアイテム】
-${context.actionItems?.map(item => `- ${item.title} (${item.status})`).join("\n")}
+${context.actionItems?.map((item: any) => `- ${item.title} (${item.status})`).join("\n")}
 
 【マイルストーン】
-${context.milestones?.map(milestone => `- ${milestone.title} (${milestone.status})`).join("\n")}
+${context.milestones?.map((milestone: any) => `- ${milestone.title} (${milestone.status})`).join("\n")}
 
 あなたの役割：
 1. プロジェクトの進捗状況を把握し、適切なアドバイスを提供

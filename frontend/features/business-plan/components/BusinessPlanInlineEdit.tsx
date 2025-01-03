@@ -21,13 +21,14 @@ interface BusinessPlanInlineEditProps {
   onChange?: (field: string, value: string) => void
 }
 
+const DEFAULT_SELECT_OPTIONS: { value: string, label: string }[] = []
+
 export function BusinessPlanInlineEdit({
-  id,
   field,
   value,
   type = "input",
   className = "",
-  selectOptions = [],
+  selectOptions = DEFAULT_SELECT_OPTIONS,
   onChange,
 }: BusinessPlanInlineEditProps) {
   const [editValue, setEditValue] = useState(value)

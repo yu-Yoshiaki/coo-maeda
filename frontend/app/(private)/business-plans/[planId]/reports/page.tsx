@@ -57,9 +57,6 @@ export default function ReportsPage({
         return
       }
 
-      console.log("Fetched business plan:", plan)
-      console.log("Fetched action items:", items)
-
       setBusinessPlan(plan)
       setActionItems(items)
       setLoading(false)

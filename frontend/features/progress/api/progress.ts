@@ -8,9 +8,6 @@ import type {
   UpdateProgressRequest,
 } from "../types"
 import { db } from "@/lib/db"
-import {
-  TaskStatus,
-} from "../types"
 
 // タスク関連のAPI
 export const taskApi = {

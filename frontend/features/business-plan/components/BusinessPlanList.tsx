@@ -49,24 +49,26 @@ export function BusinessPlanList() {
             <div className="text-sm text-gray-500">
               開始:
               {" "}
-              {new Date(plan.startDate).toLocaleDateString()}
+              {plan.start_date ? new Date(plan.start_date).toLocaleDateString() : "未設定"}
             </div>
             <div className="text-sm text-gray-500">
               終了:
               {" "}
-              {new Date(plan.endDate).toLocaleDateString()}
+              {plan.end_date ? new Date(plan.end_date).toLocaleDateString() : "未設定"}
             </div>
           </div>
 
           <div className="mt-4 border-t border-gray-100 pt-4">
             <div className="flex space-x-2">
               <button
+                type="button"
                 onClick={() => window.location.href = `/business-plans/${plan.id}`}
                 className="flex-1 rounded-md px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
               >
                 詳細
               </button>
               <button
+                type="button"
                 onClick={() => handleDelete(plan.id)}
                 className="rounded-md px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
               >

@@ -106,7 +106,7 @@ export function BusinessPlanAIAnalyzer() {
       <ScrollArea className="mb-4 h-[400px] pr-4">
         {messages.map((message, index) => (
           <div
-            key={index}
+            key={`message-${index}`}
             className={`mb-4 flex ${
               message.role === "user" ? "justify-end" : "justify-start"
             }`}
@@ -119,33 +119,41 @@ export function BusinessPlanAIAnalyzer() {
               }`}
             >
               <div className="prose prose-sm dark:prose-invert max-w-none">
-                {message.role === "user" ? (
-                  <div className="whitespace-pre-wrap break-words text-sm">
-                    {message.content}
-                  </div>
-                ) : (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    className="whitespace-pre-wrap break-words text-sm"
-                    components={{
-                      // リンクを新しいタブで開く
-                      a: ({ node, ...props }) => (
-                        <a target="_blank" rel="noopener noreferrer" {...props} />
-                      ),
-                      // コードブロックのスタイリング
-                      code: ({ node, inline, ...props }) =>
-                        inline
-                          ? (
-                              <code className="rounded bg-gray-200 px-1 py-0.5 text-sm dark:bg-gray-800" {...props} />
-                            )
-                          : (
-                              <code className="block overflow-x-auto rounded bg-gray-200 p-2 text-sm dark:bg-gray-800" {...props} />
-                            ),
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                )}
+                {message.role === "user"
+                  ? (
+                      <div className="whitespace-pre-wrap break-words text-sm">
+                        {message.content}
+                      </div>
+                    )
+                  : (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className="whitespace-pre-wrap break-words text-sm"
+                        components={{
+                          // リンクを新しいタブで開く
+                          a: ({ node, ...props }) => (
+                            <a target="_blank" rel="noopener noreferrer" {...props} />
+                          ),
+                          // コードブロックのスタイリング
+                          code: ({ node, inline, className, ...props }: { node?: any, inline?: boolean, className?: string }) =>
+                            inline
+                              ? (
+                                  <code
+                                    className={`rounded bg-gray-200 px-1 py-0.5 text-sm dark:bg-gray-800 ${className || ""}`}
+                                    {...props}
+                                  />
+                                )
+                              : (
+                                  <code
+                                    className={`block overflow-x-auto rounded bg-gray-200 p-2 text-sm dark:bg-gray-800 ${className || ""}`}
+                                    {...props}
+                                  />
+                                ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    )}
               </div>
             </div>
           </div>

@@ -6,7 +6,7 @@ export function createPromptContext(
   tasks: Task[],
   milestones: Milestone[],
   risks: Risk[],
-  alerts: Alert[],
+  _alerts: Alert[],
 ): PromptContext {
   const now = new Date()
   const timeframe = calculateTimeframe(tasks, milestones)
@@ -78,7 +78,7 @@ export function parseJsonResponse(response: string): any {
 // 日付の妥当性チェック
 export function isValidDate(dateString: string): boolean {
   const date = new Date(dateString)
-  return date instanceof Date && !isNaN(date.getTime())
+  return date instanceof Date && !Number.isNaN(date.getTime())
 }
 
 // 進捗率の正規化
@@ -90,7 +90,7 @@ export function normalizeProgress(progress: number): number {
 export function calculateConfidenceScore(
   tasks: Task[],
   risks: Risk[],
-  alerts: Alert[],
+  _alerts: Alert[],
 ): number {
   const factors = [
     // タスクの完了度
@@ -102,7 +102,7 @@ export function calculateConfidenceScore(
       / risks.length
       : 1,
     // アラートの状態
-    alerts.length > 0 ? alerts.filter(a => a.isRead).length / alerts.length : 1,
+    _alerts.length > 0 ? _alerts.filter(a => a.isRead).length / _alerts.length : 1,
   ]
 
   return Number((factors.reduce((sum, factor) => sum + factor, 0) / factors.length).toFixed(2))

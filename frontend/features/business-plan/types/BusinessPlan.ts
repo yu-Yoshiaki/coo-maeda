@@ -9,6 +9,7 @@ export interface ActionItem {
   status: ActionItemStatus
   start_date: string | null
   due_date: string | null
+  resources?: string[]
   business_plan_id: string
   created_at: string
   updated_at: string
@@ -41,6 +42,7 @@ export interface BusinessPlan {
     how?: string
   }
   action_items?: ActionItem[]
+  milestones?: Milestone[]
   created_at: string
   updated_at: string
 }

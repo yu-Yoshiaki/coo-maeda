@@ -1,9 +1,4 @@
-import { Loading } from "@/components/ui/Loading"
 import { BusinessPlanAIAnalyzer } from "@/features/business-plan/components/BusinessPlanAIAnalyzer"
-import { BusinessPlanGantt } from "@/features/business-plan/components/BusinessPlanGantt"
-import { BusinessPlanList } from "@/features/business-plan/components/BusinessPlanList"
-import { createClient } from "@/lib/supabase/server"
-import { Suspense } from "react"
 
 // export const metadata = {
 //   title: "事業計画管理 - COO前田くんAI",

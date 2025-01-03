@@ -7,8 +7,8 @@ export interface Schedule {
   location?: string
   attendees?: string[]
   isAllDay?: boolean
-  status: 'confirmed' | 'tentative' | 'cancelled'
-  source: 'internal' | 'google' | 'outlook'
+  status: "confirmed" | "tentative" | "cancelled"
+  source: "internal" | "google" | "outlook"
   createdAt: Date
   updatedAt: Date
 }
@@ -25,4 +25,4 @@ export interface ScheduleCreateInput {
 
 export interface ScheduleUpdateInput extends Partial<ScheduleCreateInput> {
   id: string
-} 
+}

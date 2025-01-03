@@ -1,24 +1,31 @@
 "use client"
 
+import type { ProgressReport } from "../types"
 import { useState } from "react"
 import { useProgress } from "../hooks/useProgress"
-import { AlertType, RiskSeverity, TaskStatus } from "../types"
 
 export function ProgressTracker() {
   const {
     tasks,
     milestones,
-    report,
     risks,
     alerts,
     loading,
     error,
-    updateTaskProgress,
+    updateProgress,
     generateReport,
     markAlertAsRead,
   } = useProgress()
 
   const [selectedMilestone, setSelectedMilestone] = useState<string | null>(null)
+  const [report, setReport] = useState<ProgressReport | null>(null)
+
+  const handleGenerateReport = async () => {
+    const result = await generateReport()
+    if (result.data) {
+      setReport(result.data)
+    }
+  }
 
   if (loading) {
     return <div className="p-4">読み込み中...</div>
@@ -66,11 +73,11 @@ export function ProgressTracker() {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{task.title}</h3>
                 <span className={`rounded px-2 py-1 text-sm ${
-                  task.status === TaskStatus.COMPLETED
+                  task.status === "COMPLETED"
                     ? "bg-green-100"
-                    : task.status === TaskStatus.IN_PROGRESS
+                    : task.status === "IN_PROGRESS"
                       ? "bg-blue-100"
-                      : task.status === TaskStatus.BLOCKED
+                      : task.status === "BLOCKED"
                         ? "bg-red-100"
                         : "bg-gray-100"
                 }`}
@@ -85,7 +92,7 @@ export function ProgressTracker() {
                   min="0"
                   max="100"
                   value={task.progress}
-                  onChange={e => updateTaskProgress(task.id, Number(e.target.value))}
+                  onChange={e => updateProgress({ taskId: task.id, progress: Number(e.target.value) })}
                   className="flex-1"
                 />
                 <span className="text-sm">
@@ -107,11 +114,11 @@ export function ProgressTracker() {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{risk.title}</h3>
                 <span className={`rounded px-2 py-1 text-sm ${
-                  risk.severity === RiskSeverity.CRITICAL
+                  risk.severity === "CRITICAL"
                     ? "bg-red-100"
-                    : risk.severity === RiskSeverity.HIGH
+                    : risk.severity === "HIGH"
                       ? "bg-orange-100"
-                      : risk.severity === RiskSeverity.MEDIUM
+                      : risk.severity === "MEDIUM"
                         ? "bg-yellow-100"
                         : "bg-green-100"
                 }`}
@@ -143,11 +150,11 @@ export function ProgressTracker() {
             <div key={alert.id} className="space-y-2 rounded border p-4">
               <div className="flex items-center justify-between">
                 <span className={`rounded px-2 py-1 text-sm ${
-                  alert.type === AlertType.DELAY
+                  alert.type === "DELAY"
                     ? "bg-red-100"
-                    : alert.type === AlertType.RISK
+                    : alert.type === "RISK"
                       ? "bg-orange-100"
-                      : alert.type === AlertType.MILESTONE
+                      : alert.type === "MILESTONE"
                         ? "bg-blue-100"
                         : "bg-yellow-100"
                 }`}
@@ -155,6 +162,7 @@ export function ProgressTracker() {
                   {alert.type}
                 </span>
                 <button
+                  type="button"
                   onClick={() => markAlertAsRead(alert.id)}
                   className="text-sm text-blue-500 hover:text-blue-700"
                 >
@@ -170,7 +178,8 @@ export function ProgressTracker() {
       {/* レポート生成ボタン */}
       <div className="flex justify-end">
         <button
-          onClick={generateReport}
+          type="button"
+          onClick={handleGenerateReport}
           className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
         >
           進捗レポート生成
@@ -195,8 +204,8 @@ export function ProgressTracker() {
             <div className="space-y-2">
               <h4 className="font-semibold">推奨事項:</h4>
               <ul className="list-inside list-disc space-y-1">
-                {report.recommendations.map((rec, index) => (
-                  <li key={index} className="text-sm">{rec}</li>
+                {report.recommendations.map((rec: string, index: number) => (
+                  <li key={`rec-${index}`} className="text-sm">{rec}</li>
                 ))}
               </ul>
             </div>

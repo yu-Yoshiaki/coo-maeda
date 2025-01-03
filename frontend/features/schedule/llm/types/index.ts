@@ -1,5 +1,3 @@
-import type { Participant, RecurrenceRule, Reminder } from "../../types"
-
 export interface BaseSchedule {
   title: string
   description?: string

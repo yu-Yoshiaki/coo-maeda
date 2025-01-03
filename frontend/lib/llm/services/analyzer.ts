@@ -1,6 +1,6 @@
 import type OpenAI from "openai"
 import type { BasePrompt } from "../prompts/business-plans"
-import { OpenAIConfig, OpenAIError } from "../config"
+import { OpenAIConfig } from "../config"
 
 /**
  * LLM分析サービス

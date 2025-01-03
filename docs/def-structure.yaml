@@ -11,6 +11,29 @@ root:
           - CLIコマンド設定
           - エラー処理ルール
           - Next.js設定
+          - Lintルール
+            - 変数命名規則
+              - 未使用変数は_プレフィックス
+              - 一時的な変数は明確な命名
+            - アクセシビリティ
+              - buttonタグにはtype属性必須
+              - キーボード操作対応
+            - パフォーマンス
+              - 配列のkeyにはインデックス不可
+              - useEffectの依存配列は必須
+              - 配列のデフォルト値は定数化
+            - Next.js固有
+              - processはrequireで使用（環境変数は除外）
+              - Server Componentの明示
+            - コード品質
+              - console文は本番環境で禁止
+              - 型安全性の確保
+              - useMemoによる最適化
+          - Tailwind設定
+            - カスタムクラス名はtheme.extendで定義
+            - アニメーション設定
+            - カラー設定
+            - 最新記法の使用（opacity等）
         dependency: []
       .gitignore:
         content: |-
@@ -370,15 +393,64 @@ root:
                 外部依存:
                 - react
                 - sonner
+                - @/hooks/schedule/useSchedule
                 機能:
                 - スケジュール一覧表示
                 - スケジュール作成/編集/削除
                 - カレンダー表示
                 - 自然言語入力
+                - エラーハンドリング
+                  - ローディング状態表示
+                  - エラーメッセージ表示
+                - 型安全性
+                  - 未使用変数は_プレフィックス
+                  - Schedule型の厳密な使用
               dependency:
                 - /frontend/hooks/schedule/useSchedule.ts
-                - /frontend/hooks/schedule/useScheduleAnalyzer.ts
-                - /frontend/components/schedule/ScheduleCalendar.tsx
+                - /frontend/features/schedule/types/Schedule.ts
+              ScheduleList.tsx:
+                content: |-
+                  スケジュール一覧コンポーネント
+                  外部依存:
+                  - react
+                  - date-fns
+                  機能:
+                  - 日付別グループ化表示
+                  - スケジュール詳細モーダル
+                  - アクセシビリティ対応
+                    - buttonタグのtype属性
+                    - キーボード操作
+                  - 日本語対応
+                    - date-fnsのjaロケール
+                  - レスポンシブデザイン
+                  - パフォーマンス最適化
+                    - 配列のデフォルト値を定数化
+                    - 不要なレンダリングの防止
+                  - モダンなUIデザイン
+                    - Tailwind CSSの最新記法
+                    - bg-opacity → bg-black/50
+                dependency:
+                  - /frontend/features/schedule/types/Schedule.ts
+          progress:
+            components:
+              ProgressTracker.tsx:
+                content: |-
+                  進捗管理コンポーネント
+                  外部依存:
+                  - react
+                  - @/hooks/progress/useProgress
+                  機能:
+                  - マイルストーン管理
+                  - タスク進捗管理
+                  - リスク管理
+                  - アラート管理
+                  - レポート生成
+                  - 型安全性
+                    - ProgressReport型の使用
+                    - 列挙型の文字列リテラル使用
+                dependency:
+                  - /frontend/features/progress/hooks/useProgress.ts
+                  - /frontend/features/progress/types/index.ts
           ui:
             alert-dialog.tsx:
               content: |-
@@ -416,6 +488,23 @@ root:
                   - 差異分析
                   - 予測表示
                 dependency: []
+              BusinessPlanAIAnalyzer.tsx:
+                content: |-
+                  事業計画AI分析コンポーネント
+                  外部依存:
+                  - react
+                  - react-markdown
+                  - remark-gfm
+                  機能:
+                  - チャットベースの対話
+                  - マークダウン表示
+                  - コンテキスト管理
+                  - エラーハンドリング
+                  - 型安全性
+                    - Message型の厳密な使用
+                    - keyの一意性確保
+                dependency:
+                  - /frontend/features/business-plan/types/BusinessPlan.ts
           schedule:
             api:
               schedule.ts:
@@ -562,6 +651,18 @@ root:
                     - URLセッション検出
                   - エラーハンドリング
                 dependency: []
+            client.ts:
+              content: |-
+                Supabaseクライアント設定
+                外部依存:
+                - @supabase/ssr
+                機能:
+                - クライアント初期化
+                - 環境変数管理
+                  - Next.js推奨のprocess.env使用
+                  - 型安全性の確保
+                dependency:
+                  - /frontend/.env
       supabase:
         migrations:
           20240101000000_create_schedules.sql:
@@ -608,3 +709,32 @@ root:
           dependency:
             - /frontend/lib/supabase/server.ts
             - /frontend/lib/supabase/middleware.ts
+        tailwind.config.ts:
+          content: |-
+            Tailwind設定ファイル
+            外部依存:
+            - tailwindcss
+            - tailwindcss-animate
+            機能:
+            - コンテンツパス設定
+              - components/**/*.{ts,tsx}
+              - app/**/*.{ts,tsx}
+              - features/**/*.{ts,tsx}
+            - テーマ拡張
+              - カスタムボーダー半径
+              - カスタムカラー
+                - background/foreground
+                - card/popover
+                - primary/secondary
+                - muted/accent
+                - destructive
+                - border/input/ring
+                - chart (1-5)
+              - アニメーション
+                - accordion-down
+                - accordion-up
+            - プラグイン
+              - tailwindcss-animate (ESM形式)
+            - ダークモード対応
+          dependency:
+            - /frontend/app/globals.css

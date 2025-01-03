@@ -7,9 +7,6 @@ import type {
 } from "../types"
 import { useCallback, useEffect, useState } from "react"
 import { alertApi, milestoneApi, reportApi, riskApi, taskApi } from "../api/progress"
-import {
-  Alert,
-} from "../types"
 
 export function useProgress() {
   const [state, setState] = useState<ProgressTrackerState>({
@@ -60,7 +57,7 @@ export function useProgress() {
   // データの初期読み込み
   useEffect(() => {
     loadAllData()
-  }, [])
+  }, [loadAllData])
 
   // タスクの作成
   const createTask = useCallback(

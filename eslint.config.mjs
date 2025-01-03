@@ -1,5 +1,5 @@
-import antfu from "@antfu/eslint-config";
-import tailwindcss from "eslint-plugin-tailwindcss";
+import antfu from "@antfu/eslint-config"
+import tailwindcss from "eslint-plugin-tailwindcss"
 
 export default antfu(
   {
@@ -9,5 +9,5 @@ export default antfu(
       quotes: "double",
     },
   },
-  ...tailwindcss.configs["flat/recommended"]
-);
+  ...tailwindcss.configs["flat/recommended"],
+)

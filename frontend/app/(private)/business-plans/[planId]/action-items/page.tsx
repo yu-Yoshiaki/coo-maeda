@@ -9,7 +9,6 @@ import { ActionItemInlineEdit } from "@/features/business-plan/components/Action
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { Check, CheckCircle2, Circle, Clock } from "lucide-react"
-import { notFound } from "next/navigation"
 import { useEffect, useState } from "react"
 
 const STATUS_OPTIONS = [
@@ -71,7 +70,7 @@ export default function ActionItemsPage({
   // 初期データの取得
   useEffect(() => {
     fetchData()
-  }, [params.planId])
+  }, [fetchData])
 
   if (!actionItems) {
     return <Loading />

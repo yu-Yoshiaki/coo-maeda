@@ -60,7 +60,7 @@ export function ActionItemCreateDialog({
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof actionItemSchema>>({
     resolver: zodResolver(actionItemSchema),
     defaultValues: {
       title: "",

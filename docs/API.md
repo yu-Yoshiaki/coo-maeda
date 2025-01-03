@@ -15,7 +15,7 @@ const { data, error } = await supabase.auth.signUp({
       avatar_url: string,
     },
   },
-});
+})
 ```
 
 ### 1.2 ログイン
@@ -25,14 +25,14 @@ const { data, error } = await supabase.auth.signUp({
 const { data, error } = await supabase.auth.signInWithPassword({
   email: string,
   password: string,
-});
+})
 ```
 
 ### 1.3 ログアウト
 
 ```typescript
 // Supabaseの組み込み認証を使用
-const { error } = await supabase.auth.signOut();
+const { error } = await supabase.auth.signOut()
 ```
 
 ### 1.4 セッション管理
@@ -42,13 +42,13 @@ const { error } = await supabase.auth.signOut();
 const {
   data: { session },
   error,
-} = await supabase.auth.getSession();
+} = await supabase.auth.getSession()
 
 // セッション更新
 const {
   data: { session },
   error,
-} = await supabase.auth.refreshSession();
+} = await supabase.auth.refreshSession()
 ```
 
 ## 2. チャット API
@@ -104,7 +104,7 @@ const { data, error } = await supabase
   `
   )
   .order("created_at", { ascending: false })
-  .range(0, 49); // ページネーション
+  .range(0, 49) // ページネーション
 
 // リアルタイム購読
 const subscription = supabase
@@ -114,7 +114,7 @@ const subscription = supabase
     schema: "public",
     table: "chat_messages",
   })
-  .subscribe();
+  .subscribe()
 ```
 
 ## 3. タスク API
@@ -133,7 +133,7 @@ const { data, error } = await supabase
     metadata: Record<string, any>,
   })
   .select()
-  .single();
+  .single()
 ```
 
 ### 3.2 タスク一覧取得
@@ -146,7 +146,7 @@ const { data, error } = await supabase
   .eq("status", status)
   .gte("due_date", due_date_from)
   .lte("due_date", due_date_to)
-  .order("priority", { ascending: false });
+  .order("priority", { ascending: false })
 
 // リアルタイム購読
 const subscription = supabase
@@ -156,7 +156,7 @@ const subscription = supabase
     schema: "public",
     table: "tasks",
   })
-  .subscribe();
+  .subscribe()
 ```
 
 ## 4. スケジュール API
@@ -196,7 +196,7 @@ const { data, error } = await supabase
   `
   )
   .gte("start_time", start_date)
-  .lte("end_time", end_date);
+  .lte("end_time", end_date)
 
 // リアルタイム購読
 const subscription = supabase
@@ -206,7 +206,7 @@ const subscription = supabase
     schema: "public",
     table: "schedules",
   })
-  .subscribe();
+  .subscribe()
 ```
 
 ## 5. KPI API
@@ -228,7 +228,7 @@ const { data, error } = await supabase
   )
   .eq("category", category)
   .gte("recorded_at", start_date)
-  .lte("recorded_at", end_date);
+  .lte("recorded_at", end_date)
 ```
 
 ### 5.2 KPI 更新
@@ -240,7 +240,7 @@ const { data, error } = await supabase.rpc("update_kpi", {
   p_value: number,
   p_recorded_at: string,
   p_metadata: Record<string, any>,
-});
+})
 ```
 
 ## 6. ファイル処理 API
@@ -256,7 +256,7 @@ const { data, error } = await supabase.storage
     metadata: {
       // カスタムメタデータ
     },
-  });
+  })
 ```
 
 ### 6.2 ファイル分析
@@ -335,7 +335,7 @@ const subscription = supabase
   .on("presence", { event: "sync" }, () => {
     // プレゼンス状態の同期
   })
-  .subscribe();
+  .subscribe()
 ```
 
 ## 9. Edge Functions
