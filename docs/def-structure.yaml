@@ -1,0 +1,537 @@
+error: null
+root:
+  main:
+    root:
+      .cursorrules:
+        content: |-
+          設定ファイル
+          機能:
+          - アシスタント設定
+          - タスク作成ルール
+          - CLIコマンド設定
+          - エラー処理ルール
+          - Next.js設定
+        dependency: []
+      .gitignore:
+        content: |-
+          Git除外設定
+          機能:
+          - node_modules除外
+          - ビルドファイル除外
+          - 環境変数ファイル除外
+          - キャッシュファイル除外
+        dependency: []
+      .vscode:
+        settings.json:
+          content: |-
+            VSCode設定
+            機能:
+            - ESLint設定
+            - フォーマット設定
+            - コード補完設定
+          dependency: []
+      docs:
+        API.md:
+          content: |-
+            API仕様書
+            外部依存:
+            - Supabase
+            - OpenAI
+            機能:
+            - 認証API仕様
+            - チャットAPI仕様
+            - タスクAPI仕様
+            - スケジュールAPI仕様
+            - KPI API仕様
+            - ファイル処理API仕様
+          dependency: []
+        ARCHITECTURE.md:
+          content: |-
+            アーキテクチャ設計書
+            外部依存:
+            - Mermaid
+            機能:
+            - システム概要
+            - フロントエンド設計
+            - バックエンド設計
+            - AI処理設計
+            - セキュリティ設計
+          dependency: []
+        CONTRIBUTING.md:
+          content: |-
+            コントリビューションガイド
+            外部依存:
+            - TypeScript
+            - React
+            - TailwindCSS
+            機能:
+            - 開発環境セットアップ手順
+            - 開発ワークフロー
+            - コーディング規約
+            - レビュープロセス
+          dependency: []
+        DATABASE.md:
+          content: |-
+            データベース定義書
+            外部依存:
+            - PostgreSQL
+            - Mermaid
+            機能:
+            - ER図
+            - テーブル定義
+            - インデックス定義
+            - 制約定義
+          dependency: []
+        OPERATION_FLOW.md:
+          content: |-
+            操作フロー定義
+            外部依存:
+            - Mermaid
+            機能:
+            - チャットベースの操作フロー
+            - サイドメニュー操作フロー
+            - タスク管理フロー
+            - スケジュール管理フロー
+            - 事業計画管理フロー
+          dependency: []
+        REQUIREMENTS.md:
+          content: |-
+            要件定義書
+            外部依存:
+            - Next.js
+            - TailwindCSS
+            - Supabase
+            - OpenAI API
+            機能:
+            - プロジェクト概要
+            - 機能要件
+            - 非機能要件
+            - 技術要件
+            - 開発フェーズ
+            - 成功基準
+          dependency: []
+        REQUIREMENTS_CHECKLIST.md:
+          content: |-
+            要件定義チェックリスト
+            機能:
+            - プロジェクト基本情報チェック
+            - 機能要件チェック
+            - 非機能要件チェック
+            - プロジェクト進行チェック
+            - リスク確認
+          dependency:
+            - /docs/REQUIREMENTS.md
+        SCREEN_DEFINITIONS.md:
+          content: |-
+            画面定義書
+            外部依存:
+            - ASCII Art
+            - Mermaid
+            機能:
+            - 基本設計コンセプト
+            - メイン画面設計
+            - サイドドロワー設計
+            - 事業計画管理画面設計
+            - モバイル対応設計
+          dependency: []
+        develop-plan.md:
+          content: |-
+            COO前田くんAI実装計画書
+            機能:
+            - 開発フェーズ定義
+            - 技術スタック定義
+            - 品質管理計画
+            - リスク管理
+            - 成功基準
+            - 保守運用計画
+          dependency:
+            - /docs/REQUIREMENTS_CHECKLIST.md
+      frontend:
+        app:
+          (private):
+            business-plans:
+              [planId]:
+                page.tsx:
+                  content: |-
+                    事業計画詳細ページ
+                    外部依存:
+                    - react
+                    - next
+                    機能:
+                    - 事業計画詳細表示
+                    - 進捗管理
+                    - リソース管理
+                  dependency: []
+                reports:
+                  page.tsx:
+                    content: |-
+                      事業計画レポートページ
+                      外部依存:
+                      - react
+                      - next
+                      機能:
+                      - 進捗レポート
+                      - KPI分析
+                      - リスク分析
+                    dependency: []
+              page.tsx:
+                content: |-
+                  事業計画一覧ページ
+                  外部依存:
+                  - react
+                  - next
+                  機能:
+                  - 事業計画一覧表示
+                  - 新規作成
+                  - フィルタリング
+                dependency: []
+            layout.tsx:
+              content: |-
+                プライベートレイアウト
+                外部依存:
+                - react
+                - next
+                機能:
+                - 認証チェック
+                - ナビゲーション
+                - サイドバー
+              dependency: []
+          api:
+            schedules:
+              analyze:
+                route.ts:
+                  content: |-
+                    スケジュール分析API
+                    外部依存:
+                    - @/lib/auth
+                    - @/lib/db
+                    - next/server
+                    - openai
+                    機能:
+                    - スケジュール分析
+                    - コンテキスト理解
+                    - 最適化提案
+                  dependency:
+                    - /frontend/lib/auth.ts
+                    - /frontend/lib/db.ts
+              natural-language:
+                route.ts:
+                  content: |-
+                    自然言語処理API
+                    外部依存:
+                    - @/lib/auth
+                    - next/server
+                    - openai
+                    機能:
+                    - 自然言語からスケジュール生成
+                    - 日時抽出
+                    - 参加者抽出
+                  dependency:
+                    - /frontend/lib/auth.ts
+          layout.tsx:
+            content: |-
+              ルートレイアウト
+              外部依存:
+              - next
+              - react-big-calendar
+              機能:
+              - アプリケーションの基本レイアウト
+              - グローバルスタイル
+              - エラーハンドリング
+            dependency:
+              - /frontend/app/globals.css
+          login:
+            actions.ts:
+              content: |-
+                ログインアクション
+                外部依存:
+                - @/lib/supabase/server
+                - next/cache
+                - next/navigation
+                機能:
+                - ログイン処理
+                - サインアップ処理
+                - ソーシャルログイン
+              dependency:
+                - /frontend/lib/supabase/server.ts
+            page.tsx:
+              content: |-
+                ログインページ
+                外部依存:
+                - react
+                機能:
+                - ログインフォーム
+                - サインアップフォーム
+                - ソーシャルログインボタン
+              dependency:
+                - /frontend/app/login/actions.ts
+          page.tsx:
+            content: |-
+              トップページ
+              外部依存:
+              - react
+              - next
+              機能:
+              - ダッシュボード表示
+              - KPIサマリー
+              - 最近のアクティビティ
+            dependency: []
+        components:
+          chat:
+            ChatInterface.tsx:
+              content: |-
+                チャットインターフェース
+                外部依存:
+                - react
+                - lucide-react
+                機能:
+                - メッセージ表示
+                - メッセージ送信
+                - コンテキスト管理
+                - ファイル添付
+              dependency: []
+          layout:
+            MainLayout.tsx:
+              content: |-
+                メインレイアウト
+                外部依存:
+                - react
+                機能:
+                - ヘッダー表示
+                - サイドドロワー制御
+                - コンテンツ表示
+                - レスポンシブ対応
+              dependency:
+                - /frontend/components/navigation/Header.tsx
+                - /frontend/components/navigation/SideDrawer.tsx
+          navigation:
+            Header.tsx:
+              content: |-
+                ヘッダーコンポーネント
+                外部依存:
+                - react
+                - lucide-react
+                機能:
+                - メニューボタン
+                - 通知ボタン
+                - プロフィール表示
+              dependency: []
+            SideDrawer.tsx:
+              content: |-
+                サイドドロワー
+                外部依存:
+                - react
+                - framer-motion
+                - lucide-react
+                機能:
+                - アニメーション付きドロワー
+                - タスク一覧表示
+                - KPIサマリー
+                - スケジュール表示
+              dependency:
+                - /frontend/components/navigation/sidebar/KPISummary.tsx
+                - /frontend/components/navigation/sidebar/Schedule.tsx
+                - /frontend/components/navigation/sidebar/TaskList.tsx
+          schedule:
+            ScheduleManager.tsx:
+              content: |-
+                スケジュール管理コンポーネント
+                外部依存:
+                - react
+                - sonner
+                機能:
+                - スケジュール一覧表示
+                - スケジュール作成/編集/削除
+                - カレンダー表示
+                - 自然言語入力
+              dependency:
+                - /frontend/hooks/schedule/useSchedule.ts
+                - /frontend/hooks/schedule/useScheduleAnalyzer.ts
+                - /frontend/components/schedule/ScheduleCalendar.tsx
+          ui:
+            alert-dialog.tsx:
+              content: |-
+                アラートダイアログ
+                外部依存:
+                - react
+                - shadcn/ui
+                機能:
+                - 確認ダイアログ
+                - エラーダイアログ
+                - 成功通知
+              dependency: []
+        features:
+          business-plan:
+            components:
+              BottleneckAnalysis.tsx:
+                content: |-
+                  ボトルネック分析コンポーネント
+                  外部依存:
+                  - react
+                  - recharts
+                  機能:
+                  - ボトルネック可視化
+                  - 改善提案
+                  - トレンド分析
+                dependency: []
+              PlanVsActual.tsx:
+                content: |-
+                  計画vs実績コンポーネント
+                  外部依存:
+                  - react
+                  - recharts
+                  機能:
+                  - 計画と実績の比較
+                  - 差異分析
+                  - 予測表示
+                dependency: []
+          schedule:
+            api:
+              schedule.ts:
+                content: |-
+                  スケジュールAPI
+                  外部依存:
+                  - axios
+                  機能:
+                  - スケジュールCRUD操作
+                  - スケジュール分析
+                  - 自然言語処理
+                  - カレンダー同期
+                dependency:
+                  - /frontend/lib/db.ts
+                  - /frontend/lib/openai.ts
+        hooks:
+          schedule:
+            useSchedule.ts:
+              content: |-
+                スケジュールフック
+                外部依存:
+                - react
+                - swr
+                機能:
+                - スケジュール状態管理
+                - スケジュール操作
+                - リアルタイム更新
+                - キャッシュ管理
+              dependency:
+                - /frontend/features/schedule/api/schedule.ts
+        lib:
+          llm:
+            config.ts:
+              content: |-
+                LLM設定
+                外部依存:
+                - openai
+                機能:
+                - OpenAI API設定
+                - モデル設定
+                - トークン制限設定
+                - エラーハンドリング設定
+              dependency: []
+            prompts:
+              business-plans.ts:
+                content: |-
+                  事業計画関連プロンプト
+                  外部依存:
+                  - ./config
+                  機能:
+                  - 事業計画分析プロンプト
+                  - KPI分析プロンプト
+                  - リスク分析プロンプト
+                dependency:
+                  - /frontend/lib/llm/config.ts
+              schedules.ts:
+                content: |-
+                  スケジュール関連プロンプト
+                  外部依存:
+                  - ./config
+                  機能:
+                  - スケジュール分析プロンプト
+                  - 自然言語処理プロンプト
+                  - 最適化提案プロンプト
+                dependency:
+                  - /frontend/lib/llm/config.ts
+            services:
+              analyzer.ts:
+                content: |-
+                  LLM分析サービス
+                  外部依存:
+                  - ./config
+                  - ./prompts/*
+                  機能:
+                  - コンテキスト管理
+                  - プロンプト実行
+                  - レスポンス解析
+                  - エラーハンドリング
+                dependency:
+                  - /frontend/lib/llm/config.ts
+                  - /frontend/lib/llm/prompts/*
+              chat.ts:
+                content: |-
+                  チャットサービス
+                  外部依存:
+                  - ./config
+                  - ./prompts/*
+                  機能:
+                  - チャット履歴管理
+                  - メッセージ生成
+                  - ストリーミング処理
+                dependency:
+                  - /frontend/lib/llm/config.ts
+                  - /frontend/lib/llm/prompts/*
+          auth.ts:
+            content: |-
+              認証関連機能
+              外部依存:
+              - @supabase/supabase-js
+              機能:
+              - Supabase認証クライアント
+              - セッション管理
+              - 権限管理
+              - ソーシャルログイン
+            dependency: []
+          db.ts:
+            content: |-
+              データベース操作機能
+              外部依存:
+              - @supabase/supabase-js
+              機能:
+              - Supabaseクライアント
+              - データCRUD操作
+              - リアルタイム購読
+              - RLS対応
+            dependency: []
+          openai.ts:
+            content: |-
+              OpenAI API設定
+              外部依存:
+              - openai
+              機能:
+              - OpenAIクライアント設定
+              - プロンプト管理
+              - コンテキスト管理
+              - エラーハンドリング
+            dependency: []
+      supabase:
+        migrations:
+          20240101000000_create_schedules.sql:
+            content: |-
+              スケジュールテーブル作成
+              外部依存:
+              - PostgreSQL
+              機能:
+              - スケジュールテーブル定義
+              - RLSポリシー設定
+              - インデックス作成
+              - 外部キー制約
+            dependency: []
+          20240101000003_add_is_deleted_to_business_plans.sql:
+            content: |-
+              事業計画論理削除対応
+              外部依存:
+              - PostgreSQL
+              機能:
+              - is_deleted カラム追加
+              - インデックス作成
+              - マイグレーション処理
+            dependency: []
