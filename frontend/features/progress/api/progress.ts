@@ -272,14 +272,17 @@ export const alertApi = {
   // アラート一覧の取得
   async getAlerts(): Promise<ApiResponse<Alert[]>> {
     try {
-      const { data, error } = await db
-        .from("progress_alerts")
-        .select("*")
-        .order("created_at", { ascending: false })
+      const response = await fetch("/api/progress/alerts", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
 
-      if (error)
-        throw error
+      if (!response.ok)
+        throw new Error("アラートの取得に失敗しました")
 
+      const data = await response.json()
       return { data: data as Alert[] }
     }
     catch (error) {
