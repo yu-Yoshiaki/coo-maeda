@@ -21,7 +21,17 @@ export async function middleware(request: NextRequest) {
   const response = await updateSession(request)
 
   // プライベートページへのアクセスチェック
-  const isPrivatePage = request.nextUrl.pathname.startsWith("/(private)")
+  const privatePages = [
+    "/business-plans",
+    "/schedules",
+    "/reports",
+    "/settings",
+  ]
+
+  const isPrivatePage = privatePages.some(path =>
+    request.nextUrl.pathname.startsWith(path),
+  )
+
   if (isPrivatePage) {
     const user = await getUser()
     if (!user) {
@@ -43,6 +53,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/(api|auth|business-plans|reports|schedules|settings|)",
+    "/_next/data/:path*",
   ],
 }

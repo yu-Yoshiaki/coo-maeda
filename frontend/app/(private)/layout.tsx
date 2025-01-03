@@ -19,6 +19,7 @@ import { ChevronRight, File, LogOut, Sparkles, Trash2 } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { signout } from "../login/actions"
 
 export default async function PrivateLayout({
   children,
@@ -204,7 +205,7 @@ export default async function PrivateLayout({
                 {user?.email}
               </p>
             </div>
-            <form action="/auth/signout" method="post">
+            <form action={signout}>
               <Button
                 type="submit"
                 variant="ghost"

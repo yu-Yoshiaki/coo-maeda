@@ -1,15 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { Metadata } from "next"
-import "react-big-calendar/lib/css/react-big-calendar.css"
-
+import { Inter } from "next/font/google"
 import "./globals.css"
 
+const inter = Inter({ subsets: ["latin"] })
+
 export const metadata: Metadata = {
-  title: {
-    default: "スケジュール管理アプリ",
-    template: "%s | スケジュール管理アプリ",
-  },
-  description: "スケジュールの管理と自然言語での予定作成ができるアプリケーション",
+  title: "COO前田くんAI",
+  description: "AIがあなたのビジネスをサポート",
 }
 
 export default function RootLayout({
@@ -19,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }

@@ -291,15 +291,22 @@ root:
                 - /frontend/app/login/actions.ts
           page.tsx:
             content: |-
-              トップページ
+              ランディングページ（LP）
               外部依存:
               - react
               - next
+              - @/lib/supabase/server
               機能:
-              - ダッシュボード表示
-              - KPIサマリー
-              - 最近のアクティビティ
-            dependency: []
+              - 認証チェック
+                - ログインユーザーのリダイレクト
+              - LPコンテンツ
+                - ヒーローセクション
+                - 特徴紹介
+                - CTA（Call To Action）
+              - レスポンシブ対応
+              - SEO最適化
+            dependency:
+              - /frontend/lib/supabase/server.ts
         components:
           chat:
             ChatInterface.tsx:
