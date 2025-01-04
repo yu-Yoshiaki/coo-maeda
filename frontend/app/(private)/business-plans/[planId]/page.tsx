@@ -159,8 +159,8 @@ export default function BusinessPlanDetailPage({
                       <label className="text-sm text-gray-500">開始日</label>
                       <BusinessPlanInlineEdit
                         id={businessPlan.id}
-                        field="start_date"
-                        value={businessPlan.start_date || ""}
+                        field="startDate"
+                        value={businessPlan.startDate || ""}
                         type="date"
                         onChange={handleFieldChange}
                       />
@@ -169,8 +169,8 @@ export default function BusinessPlanDetailPage({
                       <label className="text-sm text-gray-500">終了日</label>
                       <BusinessPlanInlineEdit
                         id={businessPlan.id}
-                        field="end_date"
-                        value={businessPlan.end_date || ""}
+                        field="endDate"
+                        value={businessPlan.endDate || ""}
                         type="date"
                         onChange={handleFieldChange}
                       />

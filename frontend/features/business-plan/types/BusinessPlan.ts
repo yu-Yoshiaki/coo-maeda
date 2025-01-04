@@ -1,54 +1,94 @@
-export type BusinessPlanStatus = "draft" | "in_progress" | "completed" | "cancelled"
-export type ActionItemStatus = "todo" | "in_progress" | "completed"
-export type MilestoneStatus = "pending" | "completed"
-
-export interface ActionItem {
-  id: string
-  title: string
-  description: string | null
-  status: ActionItemStatus
-  start_date: string | null
-  due_date: string | null
-  resources?: string[]
-  business_plan_id: string
-  created_at: string
-  updated_at: string
-}
-
-export interface Milestone {
-  id: string
-  title: string
-  description: string
-  due_date: string
-  status: MilestoneStatus
-  business_plan_id: string
-  created_at: string
-  updated_at: string
-}
-
+/**
+ * 事業計画の型定義
+ */
 export interface BusinessPlan {
   id: string
   title: string
   description: string
-  goals: string[]
-  risks: string[]
-  createdAt: Date
-  updatedAt: Date
+  startDate: string
+  endDate: string
+  status: "draft" | "in_progress" | "completed" | "cancelled"
+  context: {
+    what: string
+    when: string
+    where: string
+    how: string
+    who: string
+    why: string
+  }
   userId: string
-  isDeleted?: boolean
+  createdAt: string
+  updatedAt: string
+  action_items?: ActionItem[]
 }
 
-export type BusinessPlanInput = Omit<BusinessPlan, "id" | "createdAt" | "updatedAt">
-
-export interface Risk {
+/**
+ * アクションアイテムの型定義
+ */
+export interface ActionItem {
+  id?: string
+  businessPlanId?: string
   title: string
   description: string
-  impact: "low" | "medium" | "high"
-  probability: "low" | "medium" | "high"
+  startDate: string
+  dueDate: string
+  status: "todo" | "in_progress" | "completed"
+  resources: string[]
+}
+
+/**
+ * リスクの型定義
+ */
+export interface Risk {
+  id?: string
+  businessPlanId?: string
+  title: string
+  description: string
+  impact: "high" | "medium" | "low"
+  probability: "high" | "medium" | "low"
   mitigation: string
 }
 
-export interface AIAnalysisResponse {
-  actionItems: ActionItem[]
-  risks: Risk[]
+/**
+ * マイルストーンの型定義
+ */
+export interface Milestone {
+  id?: string
+  businessPlanId?: string
+  title: string
+  description: string
+  dueDate: string
+  status: "pending" | "completed"
+}
+
+/**
+ * 事業計画の入力型定義
+ */
+export interface BusinessPlanInput {
+  title: string
+  description: string
+  startDate: string
+  endDate: string
+  status: "draft"
+  context: {
+    what: string
+    when: string
+    where: string
+    how: string
+    who: string
+    why: string
+  }
+  actionItems?: ActionItem[]
+  risks?: Risk[]
+  milestones?: Milestone[]
+}
+
+/**
+ * 事業計画APIレスポンスの型定義
+ */
+export interface BusinessPlanResponse {
+  data?: BusinessPlan
+  error?: string
+  status: "success" | "error" | "loading" | "pending"
+  message?: string
 }

@@ -1,64 +1,58 @@
-import type { BusinessPlan, BusinessPlanInput } from "../types/BusinessPlan"
-import { createClient } from "@/lib/supabase/client"
+import type { BusinessPlanInput } from "../types/BusinessPlan"
 
-const supabase = createClient()
+/**
+ * 事業計画を作成
+ */
+export async function createBusinessPlan(input: BusinessPlanInput) {
+  const response = await fetch("/api/business-plans", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  })
 
-export const businessPlanApi = {
-  async getAll(): Promise<BusinessPlan[]> {
-    const { data, error } = await supabase
-      .from("business_plans")
-      .select("*")
-      .order("created_at", { ascending: false })
+  if (!response.ok) {
+    throw new Error("Failed to create business plan")
+  }
 
-    if (error)
-      throw error
-    return data
-  },
+  return response.json()
+}
 
-  async getById(id: string): Promise<BusinessPlan> {
-    const { data, error } = await supabase
-      .from("business_plans")
-      .select("*")
-      .eq("id", id)
-      .single()
+/**
+ * チャットメッセージを送信
+ */
+export async function sendChatMessage(messages: { role: string, content: string }[]) {
+  const response = await fetch("/api/business-plans/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ messages }),
+  })
 
-    if (error)
-      throw error
-    return data
-  },
+  if (!response.ok) {
+    throw new Error("Failed to send chat message")
+  }
 
-  async create(plan: BusinessPlanInput): Promise<BusinessPlan> {
-    const { data, error } = await supabase
-      .from("business_plans")
-      .insert([plan])
-      .select()
-      .single()
+  return response.json()
+}
 
-    if (error)
-      throw error
-    return data
-  },
+/**
+ * 事業計画を生成
+ */
+export async function generateBusinessPlan(messages: { role: string, content: string }[]) {
+  const response = await fetch("/api/business-plans/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ messages }),
+  })
 
-  async update(id: string, plan: Partial<BusinessPlanInput>): Promise<BusinessPlan> {
-    const { data, error } = await supabase
-      .from("business_plans")
-      .update(plan)
-      .eq("id", id)
-      .select()
-      .single()
+  if (!response.ok) {
+    throw new Error("Failed to generate business plan")
+  }
 
-    if (error)
-      throw error
-    return data
-  },
-
-  async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from("business_plans")
-      .delete()
-      .eq("id", id)
-
-    if (error)
-      throw error
-  },
+  return response.json()
 }

@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       ],
       model: "gpt-4o-mini",
       temperature: 1,
-      max_tokens: 1000,
+      max_tokens: 300,
     })
 
     return NextResponse.json({

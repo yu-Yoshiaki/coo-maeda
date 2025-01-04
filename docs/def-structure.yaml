@@ -547,14 +547,35 @@ root:
                   - remark-gfm
                   機能:
                   - チャットベースの対話
+                    - COOとしての役割
+                      - 実行可能性評価
+                        - リソース配分の適切性
+                        - タイムラインの現実性
+                        - 必要なケイパビリティ
+                      - リスク分析
+                        - 潜在的課題の特定
+                        - 対応策の提案
+                        - コンティンジェンシー
+                      - 改善提案
+                        - アクションアイテム
+                        - KPI設定
+                        - マイルストーン
+                      - 組織的観点
+                        - チーム構成
+                        - スキルセット
+                        - コミュニケーション
+                    - 対話スタイル
+                      - 建設的なフィードバック
+                      - 具体的な提案
+                      - 必要に応じた質問
                   - マークダウン表示
                   - コンテキスト管理
                   - エラーハンドリング
                   - 型安全性
                     - Message型の厳密な使用
                     - keyの一意性確保
-                dependency:
-                  - /frontend/features/business-plan/types/BusinessPlan.ts
+                  dependency:
+                    - /frontend/features/business-plan/types/BusinessPlan.ts
           schedule:
             api:
               schedule.ts:
@@ -615,10 +636,19 @@ root:
                     LLM分析サービス
                     外部依存:
                     - ./config
+                    - ./types
                     機能:
                     - プロンプト解析
-                      - analyze: テキスト解析
-                      - analyzeJSON: JSON解析
+                      - analyze: BasePromptによる構造化解析
+                        - systemPrompt: システム指示
+                        - userPrompt: ユーザー入力
+                        - OpenAI APIパラメータ
+                          - response_format: json_object
+                          - temperature: 1
+                          - max_tokens: 2000
+                      - analyzeJSON: 型安全なJSON解析
+                        - ジェネリック型による型保証
+                        - エラーハンドリング
                     - 関数ベースAPI
                       - 純粋関数による実装
                       - 副作用の最小化
@@ -626,6 +656,15 @@ root:
                     - エラーハンドリング
                       - OpenAIエラー処理
                       - JSON解析エラー処理
+                    重要な実装ポイント:
+                      - BasePromptの構造を維持
+                        - systemPromptとuserPromptを文字列結合せず、個別にOpenAI APIのmessagesに渡す
+                        - これにより、LLMの役割とタスクを明確に分離
+                      - JSON応答の保証
+                        - response_format: { type: "json_object" }は必須
+                        - マークダウンやコードブロックの除去は不要（response_formatが保証）
+                      - エラーハンドリングの階層化
+                        - OpenAIエラー → JSON解析エラー → 型変換エラーの順で処理
                 chat.ts:
                   content: |-
                     チャットサービス
@@ -667,6 +706,16 @@ root:
                       - 関数ベースAPI
                         - 純粋関数による実装
                         - 型安全性の確保
+                      重要な実装ポイント:
+                        - プロンプトの分離
+                          - systemPrompt: JSONスキーマと制約を定義
+                          - userPrompt: ユーザー入力のみを扱う
+                        - 型定義との整合性
+                          - 生成されるJSONは必ずBusinessPlanInput型に準拠
+                          - 日付フォーマットはYYYY-MM-DD形式を強制
+                        - エラー防止
+                          - プロンプト内でJSON形式を明示的に指定
+                          - 必須フィールドの検証を含める
               types.ts:
                 content: |-
                   LLM型定義
